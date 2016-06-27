@@ -1,0 +1,29 @@
+{
+  "name": "laxar-loader",
+  "version": "0.0.0",
+  "description": "Webpack loader for LaxarJS artifacts",
+  "homepage": "http://laxarjs.org",
+  "authors": [],
+  "license": "MIT",
+  "repsitory": {
+    "type": "git",
+    "url": "https://github.com/LaxarJS/laxar-loader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LaxarJS/laxar-loader/issues",
+    "email": "info@laxarjs.org"
+  },
+  "scripts": {},
+  "keywords": [
+    "laxar",
+    "webpack",
+    "loader",
+    "artifacts",
+    "resources"
+  ],
+  "dependencies": {
+    "laxar-tooling": "^0.0.0",
+    "loader-utils": "^0.2.15"
+  },
+  "devDependencies": {}
+}
