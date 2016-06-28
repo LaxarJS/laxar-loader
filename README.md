@@ -13,7 +13,7 @@
 ```js
 import artifacts from 'laxar-loader?artifacts!laxar-application/application/flow/flow.json';
 import dependencies from 'laxar-loader?dependencies!laxar-application/application/flow/flow.json';
-import resources from 'laxar-loader?resources&embde!laxar-application/application/flow/flow.json';
+import resources from 'laxar-loader?resources&embed!laxar-application/application/flow/flow.json';
 ```
 
 ## Query options (aka the stuff after the "?")
