@@ -83,7 +83,11 @@ function moduleReader( loaderContext, loader ) {
 
    return function readModule( ref ) {
       var filename = path.resolve( loaderContext.options.context || '', ref );
-      var request = isString( loader ) ? '-!' + loader + '!' + filename : filename;
+      var request = isString( loader ) ?
+                    '!!' + loader + '!' + filename :
+                    Array.isArray( loader ) ?
+                    '!!' + loader.join( '!' ) + '!' + filename :
+                    filename;
 
       return new Promise( function( resolve, reject ) {
          loaderContext.addDependency( filename );
@@ -133,7 +137,9 @@ function exportDependencies( modulesByTechnology ) {
          return end;
       }, 0 );
 
-   var requireString = '[\n   require( \'' + dependencies.join( '\' ),\n   require( \'' ) + '\' )\n]';
+   var requireString = '[\n   ' + dependencies.map( function( dependency ) {
+      return 'require( \'' + dependency + '\' )';
+   } ).join( ',\n   ' ) + '\n]';
 
    return 'var modules = ' + requireString + ';\n' +
           'module.exports = {\n' +
