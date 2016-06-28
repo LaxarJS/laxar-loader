@@ -23,9 +23,9 @@ import resources from 'laxar-loader?resources&embde!laxar-application/applicatio
 - `?resources`: generate the resources map `var/flows/main/resources.json`
 - `?embed`: embed file contents into the resource map
 - `?json-loader`: instead of using the filesystem directly, use webpack to load json files
-- `?json-loader=loader-name`: use the given loader(s) (i.e. [`json`][json-loader]) for loading json files
+- `?json-loader=loader-name`: use the given loader(s) (e.g. [`json`][json-loader]) for loading json files
 - `?file-loader`: instead of using the filesystem directly, use webpack to load text files
-- `?file-loader=loader-name`: use the given loader(s) (i.e. [`raw`][raw-loader]) for loading text files
+- `?file-loader=loader-name`: use the given loader(s) (e.g. [`raw`][raw-loader]) for loading text files
 
 Refer to the [webpack documentation][parse-query] for details about the loader syntax.
 
