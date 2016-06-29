@@ -19,11 +19,13 @@ module.exports = function( source ) {
       this.cacheable();
    }
 
-   var readJson = moduleReader( this, query[ 'json-loader' ] ) ||
-                  traceDependencies( this, laxarTooling.jsonReader.create( logger ) );
+   var readJson = traceDependencies( this,
+                     moduleReader( this, query[ 'json-loader' ] ) ||
+                     laxarTooling.jsonReader.create( logger ) );
 
-   var readFile = moduleReader( this, query[ 'file-loader' ] ) ||
-                  traceDependencies( this, laxarTooling.fileReader.create( logger ) );
+   var readFile = traceDependencies( this,
+                     moduleReader( this, query[ 'file-loader' ] ) ||
+                     laxarTooling.fileReader.create( logger ) );
 
    var artifactCollector = laxarTooling.artifactCollector.create( logger, {
       projectPath,
@@ -81,8 +83,7 @@ function moduleReader( loaderContext, loader ) {
       return;
    }
 
-   return function readModule( ref ) {
-      var filename = path.resolve( loaderContext.options.context || '', ref );
+   return function readModule( filename ) {
       var request = isString( loader ) ?
                     '!!' + loader + '!' + filename :
                     Array.isArray( loader ) ?
@@ -90,7 +91,6 @@ function moduleReader( loaderContext, loader ) {
                     filename;
 
       return new Promise( function( resolve, reject ) {
-         loaderContext.addDependency( filename );
          loaderContext.loadModule( request, function( err, module ) {
             if( err ) {
                reject( err );
