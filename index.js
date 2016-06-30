@@ -107,10 +107,10 @@ function isString( something ) {
 }
 
 function traceDependencies( loaderContext, fn ) {
-   return function( ref, ...args ) {
+   return function( ref ) {
       var filename = path.resolve( loaderContext.options.context || '', ref );
       loaderContext.addDependency( filename );
-      return fn( filename, ...args );
+      return fn.apply( null, [ filename ].concat( [].slice.call( arguments, 1 ) ) );
    };
 }
 
