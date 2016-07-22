@@ -49,6 +49,7 @@ module.exports = function( source ) {
       done( null, result );
    };
 
+   var themeRefs = query.themes || [];
    var publicPath = typeof query.publicPath === "string" ? query.publicPath : loaderContext._compilation.outputOptions.publicPath;
 
    var readJson = traceDependencies( this,
@@ -69,8 +70,9 @@ module.exports = function( source ) {
    } );
 
    var artifactsPromise = projectPath( this.resourcePath )
-         .then( function( flowPath ) { return [ flowPath ]; } )
-         .then( artifactCollector.collectArtifacts )
+         .then( function( flowPath ) {
+            return artifactCollector.collectArtifacts( [ flowPath ], themeRefs.concat( [ 'default.theme' ] ) );
+         } )
 
    if( query.artifacts ) {
       artifactsPromise
