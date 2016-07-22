@@ -13,17 +13,25 @@
     "url": "https://github.com/LaxarJS/laxar-loader/issues",
     "email": "info@laxarjs.org"
   },
-  "scripts": {},
+  "scripts": {
+    "test": "npm run-script lint",
+    "lint": "eslint ."
+  },
   "keywords": [
     "laxar",
     "webpack",
     "loader",
     "artifacts",
-    "resources"
+    "resources",
+    "stylesheets"
   ],
   "dependencies": {
-    "laxar-tooling": "^0.0.0",
+    "laxar-tooling": "^0.1.0",
     "loader-utils": "^0.2.15"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "eslint": "^3.0.1",
+    "eslint-config-laxarjs": "^0.3.0",
+    "eslint-plugin-node": "^2.0.0"
+  }
 }

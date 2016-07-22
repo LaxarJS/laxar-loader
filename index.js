@@ -1,25 +1,26 @@
 'use strict';
 
-var path = require( 'path' ).posix;
+const path = require( 'path' ).posix;
 
-var loaderUtils = require( 'loader-utils' );
-var laxarTooling = require( 'laxar-tooling' );
+const loaderUtils = require( 'loader-utils' );
+const laxarTooling = require( 'laxar-tooling' );
 
-var NodeTemplatePlugin = require("webpack/lib/node/NodeTemplatePlugin");
-var NodeTargetPlugin = require("webpack/lib/node/NodeTargetPlugin");
-var LibraryTemplatePlugin = require("webpack/lib/LibraryTemplatePlugin");
-var SingleEntryPlugin = require("webpack/lib/SingleEntryPlugin");
-var LimitChunkCountPlugin = require("webpack/lib/optimize/LimitChunkCountPlugin");
+const NodeTemplatePlugin = require( 'webpack/lib/node/NodeTemplatePlugin' );
+const NodeTargetPlugin = require( 'webpack/lib/node/NodeTargetPlugin' );
+const LibraryTemplatePlugin = require( 'webpack/lib/LibraryTemplatePlugin' );
+const SingleEntryPlugin = require( 'webpack/lib/SingleEntryPlugin' );
+const LimitChunkCountPlugin = require( 'webpack/lib/optimize/LimitChunkCountPlugin' );
 
 function lookup( object ) {
    return function( key ) { return object[ key ]; };
 }
 
+/*eslint-disable consistent-return*/
 module.exports = function( source ) {
-   var loaderContext = this;
-   var query = loaderUtils.parseQuery( this.query );
+   const loaderContext = this;
+   const query = loaderUtils.parseQuery( this.query );
 
-   var queryModes = [
+   const queryModes = [
       'artifacts',
       'resources',
       'dependencies',
@@ -27,12 +28,12 @@ module.exports = function( source ) {
    ];
 
    if( queryModes.filter( lookup( query ) ).length !== 1 ) {
-      var message = 'Expected exactly on of the following query parameters: ' +
-                    queryModes.join( ', ' );
+      const message = 'Expected exactly on of the following query parameters: ' +
+                      queryModes.join( ', ' );
       return this.emitError( new Error( message ) );
    }
 
-   if( loaderContext[ __filename ] === false ) {
+   if( this[ __filename ] ) {
       return '';
    }
 
@@ -40,39 +41,39 @@ module.exports = function( source ) {
       this.cacheable();
    }
 
-   var logger = {
+   const logger = {
       error: this.emitError
    };
 
-   var done = this.async();
-   var success = function( result ) {
+   const done = this.async();
+   const success = function( result ) {
       done( null, result );
    };
 
-   var themeRefs = query.themes || [];
-   var publicPath = typeof query.publicPath === "string" ? query.publicPath : loaderContext._compilation.outputOptions.publicPath;
+   const themeRefs = query.themes || [];
+   const publicPath = typeof query.publicPath === 'string' ?
+      query.publicPath :
+      this._compilation.outputOptions.publicPath;
 
-   var readJson = traceDependencies( this,
-                     moduleReader( this, query[ 'json-loader' ], publicPath ) ||
-                     laxarTooling.jsonReader.create( logger ) );
+   const readJson = traceDependencies( this,
+      moduleReader( this, query[ 'json-loader' ], publicPath ) ||
+      laxarTooling.jsonReader.create( logger ) );
 
-   var readFile = traceDependencies( this,
-                     moduleReader( this, query[ 'raw-loader' ], publicPath ) ||
-                     laxarTooling.fileReader.create( logger ) );
+   const readRaw = traceDependencies( this,
+      moduleReader( this, query[ 'raw-loader' ], publicPath ) ||
+      laxarTooling.fileReader.create( logger ) );
 
-   var readCss = traceDependencies( this,
-                    moduleReader( this, query[ 'css-loader' ], publicPath ) ||
-                    laxarTooling.fileReader.create( logger ) );
+   const readCss = traceDependencies( this,
+      moduleReader( this, query[ 'css-loader' ], publicPath ) ||
+      laxarTooling.fileReader.create( logger ) );
 
-   var artifactCollector = laxarTooling.artifactCollector.create( logger, {
-      projectPath: projectPath,
-      readJson: readJson
+   const artifactCollector = laxarTooling.artifactCollector.create( logger, {
+      projectPath,
+      readJson: injectInputValue( this, source, readJson )
    } );
 
-   var artifactsPromise = projectPath( this.resourcePath )
-         .then( function( flowPath ) {
-            return artifactCollector.collectArtifacts( [ flowPath ], themeRefs.concat( [ 'default.theme' ] ) );
-         } )
+   const artifactsPromise = projectPath( this.resourcePath )
+      .then( collectArtifacts );
 
    if( query.artifacts ) {
       artifactsPromise
@@ -81,8 +82,8 @@ module.exports = function( source ) {
    }
 
    if( query.resources ) {
-      var resourceCollector = laxarTooling.resourceCollector.create( logger, {
-         readFile: readFile,
+      const resourceCollector = laxarTooling.resourceCollector.create( logger, {
+         readFile: readRaw,
          embed: query.embed
       } );
 
@@ -93,7 +94,7 @@ module.exports = function( source ) {
    }
 
    if( query.dependencies ) {
-      var dependencyCollector = laxarTooling.dependencyCollector.create( logger, {
+      const dependencyCollector = laxarTooling.dependencyCollector.create( logger, {
       } );
 
       artifactsPromise
@@ -103,8 +104,8 @@ module.exports = function( source ) {
    }
 
    if( query.stylesheets ) {
-      var stylesheetCollector = laxarTooling.stylesheetCollector.create( logger, {
-         readFile: readCss,
+      const stylesheetCollector = laxarTooling.stylesheetCollector.create( logger, {
+         readFile: readCss
       } );
 
       artifactsPromise
@@ -113,14 +114,19 @@ module.exports = function( source ) {
          .then( success, done );
    }
 
+   function collectArtifacts( flowPath ) {
+      return artifactCollector.collectArtifacts( [ flowPath ], themeRefs.concat( [ 'default.theme' ] ) );
+   }
+
    function projectPath( ref ) {
-      return new Promise( function( resolve, reject ) {
-         loaderContext.resolve( loaderContext.context, ref, function( err, filename ) {
-            if( err ) {
-               // webpack can only resolve things for which it has loaders.
-               // to resolve a directory, we replace all aliases.
-               filename = resolveAliases( ref, loaderContext.options.resolve.alias );
-            }
+      return new Promise( function( resolve ) {
+         loaderContext.resolve( loaderContext.context, ref, function( err, result ) {
+            // webpack can only resolve things for which it has loaders.
+            // to resolve a directory, we replace all aliases.
+            const filename = err ?
+               resolveAliases( ref, loaderContext.options.resolve.alias ) :
+               result;
+
             resolve( path.relative( loaderContext.options.context || '', filename ) );
          } );
       } );
@@ -129,20 +135,21 @@ module.exports = function( source ) {
 
 function moduleReader( loaderContext, loader, publicPath ) {
    if( !loader ) {
-      return;
+      return null;
    }
 
-   return function readModule( filename ) {
-      var projectFile = path.relative( loaderContext.options.context || '', filename );
-      var outputOptions = {
-         filename: projectFile,
-         publicPath: publicPath
+   return function readModule( module ) {
+
+      const filename = path.relative( loaderContext.options.context || '', module );
+      const outputOptions = {
+         filename,
+         publicPath
       };
-      var compiler = loaderContext._compilation.createChildCompiler( projectFile, outputOptions );
-      var request = isString( loader ) ?
-                    '!!' + loader + '!' + filename :
+      const compiler = loaderContext._compilation.createChildCompiler( filename, outputOptions );
+      const request = isString( loader ) ?
+                    '!!' + loader + '!' + module :
                     Array.isArray( loader ) ?
-                    '!!' + loader.join( '!' ) + '!' + filename :
+                    '!!' + loader.join( '!' ) + '!' + module :
                     filename;
 
       compiler.apply(new NodeTemplatePlugin(outputOptions));
@@ -154,9 +161,9 @@ function moduleReader( loaderContext, loader, publicPath ) {
       loaderContext.addDependency( filename );
 
       return new Promise( function( resolve, reject ) {
-         var asset;
-         var source;
-         var map;
+         let asset;
+         let source;
+         let map;
 
          compiler.plugin( 'after-compile', function( compilation, callback ) {
             asset = compilation.assets[ outputOptions.filename ];
@@ -173,7 +180,7 @@ function moduleReader( loaderContext, loader, publicPath ) {
 
          compiler.plugin( 'this-compilation', function( compilation ) {
             compilation.plugin( 'normal-module-loader', function( loaderContext ) {
-               loaderContext[ __filename ] = false;
+               loaderContext[ __filename ] = true;
             } );
          } );
 
@@ -187,7 +194,7 @@ function moduleReader( loaderContext, loader, publicPath ) {
             }
 
             if( !source ) {
-               return reject(new Error('Didn\'t get a result from compiler'));
+               return reject( new Error( 'Didn\'t get a result from compiler' ) );
             }
 
             compilation.fileDependencies
@@ -195,14 +202,14 @@ function moduleReader( loaderContext, loader, publicPath ) {
             compilation.contextDependencies
                .forEach( loaderContext.addContextDependency, loaderContext );
 
-            loaderContext[ __filename ] = true;
+            delete loaderContext[ __filename ];
 
             try {
-               var code = loaderContext.exec( source, filename );
-               resolve( code );
+               const code = loaderContext.exec( source, filename );
+               return resolve( code );
             }
             catch( err ) {
-               reject( err );
+               return reject( err );
             }
          } );
       } );
@@ -213,9 +220,33 @@ function isString( something ) {
    return ( typeof something === 'string' ) || ( something instanceof String );
 }
 
+function injectInputValue( loaderContext, source, fn ) {
+   return function( ref ) {
+      const filename = path.resolve( loaderContext.options.context || '', ref );
+
+      if( filename === loaderContext.resourcePath ) {
+         return inputValue( loaderContext, source );
+      }
+
+      return fn.apply( null, arguments );
+   };
+}
+
+function inputValue( loaderContext, source ) {
+   if( !loaderContext.inputValue ) {
+      try {
+         loaderContext.inputValue = [ loaderContext.exec( source, loaderContext.resourcePath ) ];
+      }
+      catch( err ) {
+         return Promise.reject( err );
+      }
+   }
+   return Promise.resolve( loaderContext.inputValue[ 0 ] );
+}
+
 function traceDependencies( loaderContext, fn ) {
    return function( ref ) {
-      var filename = path.resolve( loaderContext.options.context || '', ref );
+      const filename = path.resolve( loaderContext.options.context || '', ref );
       loaderContext.addDependency( filename );
       return fn.apply( null, [ filename ].concat( [].slice.call( arguments, 1 ) ) );
    };
@@ -223,32 +254,32 @@ function traceDependencies( loaderContext, fn ) {
 
 function resolveAliases( string, aliases ) {
    return Object.keys( aliases ).reduce( function( string, alias ) {
-      var pattern = new RegExp( '(^|/)' + alias + '($|/)', 'g' );
+      const pattern = new RegExp( '(^|/)' + alias + '($|/)', 'g' );
       return string.replace( pattern, '$1' + aliases[ alias ] + '$2' );
    }, string );
 }
 
 function exportObject( object ) {
-   return 'module.exports = ' + JSON.stringify( object, undefined, "\t" ) + ';';
+   return 'module.exports = ' + JSON.stringify( object, undefined, '\t' ) + ';';
 }
 
 function exportDependencies( modulesByTechnology ) {
-   var dependencies = [];
-   var registryEntries = [];
+   const dependencies = [];
+   const registryEntries = [];
 
    Object.keys( modulesByTechnology )
       .reduce( function( start, technology ) {
-         var end = start + modulesByTechnology[ technology ].length;
+         const end = start + modulesByTechnology[ technology ].length;
          [].push.apply( dependencies, modulesByTechnology[ technology ] );
          registryEntries.push( '\'' + technology + '\': modules.slice( ' + start + ', ' + end + ' )' );
          return end;
       }, 0 );
 
-   var requireString = '[\n   ' + dependencies.map( function( dependency ) {
+   const requireString = '[\n   ' + dependencies.map( function( dependency ) {
       return 'require( \'' + dependency + '\' )';
    } ).join( ',\n   ' ) + '\n]';
 
-   return 'var modules = ' + requireString + ';\n' +
+   return 'const modules = ' + requireString + ';\n' +
           'module.exports = {\n' +
           '   ' + registryEntries.join( ',\n   ' ) + '\n' +
           '};\n';
