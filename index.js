@@ -11,8 +11,15 @@ const LibraryTemplatePlugin = require( 'webpack/lib/LibraryTemplatePlugin' );
 const SingleEntryPlugin = require( 'webpack/lib/SingleEntryPlugin' );
 const LimitChunkCountPlugin = require( 'webpack/lib/optimize/LimitChunkCountPlugin' );
 
-function lookup( object ) {
-   return function( key ) { return object[ key ]; };
+function splitQuery( queryValue, defaultValue ) {
+   if( Array.isArray( queryValue ) ) {
+      return queryValue;
+   }
+   if( queryValue ) {
+      return ( queryValue + '' ).split( ',' );
+   }
+
+   return defaultValue;
 }
 
 /*eslint-disable consistent-return*/
@@ -20,18 +27,8 @@ module.exports = function( source ) {
    const loaderContext = this;
    const query = loaderUtils.parseQuery( this.query );
 
-   const queryModes = [
-      'artifacts',
-      'resources',
-      'dependencies',
-      'stylesheets'
-   ];
-
-   if( queryModes.filter( lookup( query ) ).length !== 1 ) {
-      const message = 'Expected exactly on of the following query parameters: ' +
-                      queryModes.join( ', ' );
-      return this.emitError( new Error( message ) );
-   }
+   const flows = splitQuery( query.flows, [] );
+   const themes = splitQuery( query.themes, [ 'default' ] );
 
    if( this[ __filename ] ) {
       return '';
@@ -50,7 +47,6 @@ module.exports = function( source ) {
       done( null, result );
    };
 
-   const themeRefs = query.themes || [];
    const publicPath = typeof query.publicPath === 'string' ?
       query.publicPath :
       this._compilation.outputOptions.publicPath;
@@ -59,64 +55,91 @@ module.exports = function( source ) {
       moduleReader( this, query[ 'json-loader' ], publicPath ) ||
       laxarTooling.jsonReader.create( logger ) );
 
-   const readRaw = traceDependencies( this,
-      moduleReader( this, query[ 'raw-loader' ], publicPath ) ||
-      laxarTooling.fileReader.create( logger ) );
-
-   const readCss = traceDependencies( this,
-      moduleReader( this, query[ 'css-loader' ], publicPath ) ||
-      laxarTooling.fileReader.create( logger ) );
-
    const artifactCollector = laxarTooling.artifactCollector.create( logger, {
       projectPath,
       readJson: injectInputValue( this, source, readJson )
    } );
 
-   const artifactsPromise = projectPath( this.resourcePath )
-      .then( collectArtifacts );
+   const assetResolver = laxarTooling.assetResolver.create( logger, {
+      projectPath
+   } );
 
-   if( query.artifacts ) {
-      artifactsPromise
-         .then( exportObject )
-         .then( success, done );
+   function RequireCall( module, loader ) {
+      this.path = './' + path.relative( loaderContext.context, path.resolve( module ) );
+      this.loaderPrefix = loader ?
+         '!!./' + path.relative( loaderContext.context, require.resolve( loader ) ) + '!' :
+         '';
    }
 
-   if( query.resources ) {
-      const resourceCollector = laxarTooling.resourceCollector.create( logger, {
-         readFile: readRaw,
-         embed: query.embed
-      } );
+   RequireCall.prototype.toJSON = function() {
+      return `require( '${this.loaderPrefix}${this.path}' )`;
+   };
 
-      artifactsPromise
-         .then( resourceCollector.collectResources )
-         .then( exportObject )
-         .then( success, done );
-   }
+   artifactCollector.collectArtifacts( [ { flows, themes } ] )
+      .then( artifacts => Promise.all( [
+         Promise.resolve( artifacts ),
+         Promise.all( artifacts.themes.map( theme =>
+            assetResolver.themeAssets( theme ) ) ),
+         Promise.all( artifacts.layouts.map( layout =>
+            assetResolver.layoutAssets( layout, artifacts.themes ) ) ),
+         Promise.all( artifacts.widgets.map( widget =>
+            assetResolver.widgetAssets( widget, artifacts.themes ) ) ),
+         Promise.all( artifacts.controls.map( control =>
+            assetResolver.controlAssets( control, artifacts.themes ) ) )
+      ] ) )
+      .then( results => {
+         const inputArtifacts = results[ 0 ];
+         const themeAssets = results[ 1 ];
+         const layoutAssets = results[ 2 ];
+         const widgetAssets = results[ 3 ];
+         const controlAssets = results[ 4 ];
+         const artifacts = {};
 
-   if( query.dependencies ) {
-      const dependencyCollector = laxarTooling.dependencyCollector.create( logger, {
-      } );
+         artifacts.aliases = {
+            flows: buildAliases( inputArtifacts.flows ),
+            themes: buildAliases( inputArtifacts.themes ),
+            layouts: buildAliases( inputArtifacts.layouts ),
+            pages: buildAliases( inputArtifacts.pages ),
+            widgets: buildAliases( inputArtifacts.widgets ),
+            controls: buildAliases( inputArtifacts.controls )
+         };
 
-      artifactsPromise
-         .then( dependencyCollector.collectDependencies )
-         .then( exportDependencies )
-         .then( success, done );
-   }
+         artifacts.flows = inputArtifacts.flows.map( flow => ( {
+            descriptor: { name: flow.name },
+            definition: new RequireCall( flow.path, 'json-loader' )
+         } ) );
 
-   if( query.stylesheets ) {
-      const stylesheetCollector = laxarTooling.stylesheetCollector.create( logger, {
-         readFile: readCss
-      } );
+         artifacts.themes = inputArtifacts.themes.map( ( theme, index ) => ( {
+            descriptor: { name: theme.name },
+            assets: wrapAssets( themeAssets[ index ] )
+         } ) );
 
-      artifactsPromise
-         .then( stylesheetCollector.collectStylesheets )
-         .then( exportStyles )
-         .then( success, done );
-   }
+         artifacts.pages = inputArtifacts.pages.map( page => ( {
+            descriptor: { name: page.name },
+            definition: new RequireCall( page.path, 'json-loader' )
+         } ) );
 
-   function collectArtifacts( flowPath ) {
-      return artifactCollector.collectArtifacts( [ flowPath ], themeRefs.concat( [ 'default.theme' ] ) );
-   }
+         artifacts.layouts = inputArtifacts.layouts.map( ( layout, index ) => ( {
+            descriptor: { name: layout.name },
+            assets: wrapAssets( layoutAssets[ index ] )
+         } ) );
+
+         artifacts.widgets = inputArtifacts.widgets.map( ( widget, index ) => ( {
+            descriptor: new RequireCall( path.join( widget.path, 'widget.json' ), 'json-loader' ),
+            module: new RequireCall( path.join( widget.path, widget.name ) ),
+            assets: wrapAssets( widgetAssets[ index ] )
+         } ) );
+
+         artifacts.controls = inputArtifacts.controls.map( ( control, index ) => ( {
+            descriptor: new RequireCall( path.join( control.path, 'control.json' ), 'json-loader' ),
+            module: new RequireCall( path.join( control.path, control.name ) ),
+            assets: wrapAssets( controlAssets[ index ] )
+         } ) );
+
+         return artifacts;
+      } )
+      .then( exportObject )
+      .then( success, done );
 
    function projectPath( ref ) {
       return new Promise( function( resolve ) {
@@ -131,7 +154,31 @@ module.exports = function( source ) {
          } );
       } );
    }
+
+   function wrapAssets( inputAssets ) {
+      return Object.keys( inputAssets ).reduce( ( assets, key ) => {
+         const asset = inputAssets[ key ];
+         if( typeof asset === 'object' ) {
+            assets[ key ] = wrapAssets( asset );
+         }
+         else if( /\.html$/.test( asset ) ) {
+            assets[ key ] = { content: new RequireCall( asset, 'raw-loader' ) };
+         }
+         else {
+            assets[ key ] = { url: asset };
+         }
+
+         return assets;
+      }, {} );
+   }
 };
+
+function buildAliases( artifacts ) {
+   return artifacts.reduce( ( aliases, artifact, index ) => {
+      artifact.refs.forEach( ref => { aliases[ ref ] = index; } );
+      return aliases;
+   }, {} );
+}
 
 function moduleReader( loaderContext, loader, publicPath ) {
    if( !loader ) {
@@ -260,31 +307,10 @@ function resolveAliases( string, aliases ) {
 }
 
 function exportObject( object ) {
-   return 'module.exports = ' + JSON.stringify( object, undefined, '\t' ) + ';';
+   return 'module.exports = ' + replaceRequire( JSON.stringify( object, undefined, '\t' ) ) + ';';
 }
 
-function exportDependencies( modulesByTechnology ) {
-   const dependencies = [];
-   const registryEntries = [];
-
-   Object.keys( modulesByTechnology )
-      .reduce( function( start, technology ) {
-         const end = start + modulesByTechnology[ technology ].length;
-         [].push.apply( dependencies, modulesByTechnology[ technology ] );
-         registryEntries.push( '\'' + technology + '\': modules.slice( ' + start + ', ' + end + ' )' );
-         return end;
-      }, 0 );
-
-   const requireString = '[\n   ' + dependencies.map( function( dependency ) {
-      return 'require( \'' + dependency + '\' )';
-   } ).join( ',\n   ' ) + '\n]';
-
-   return 'const modules = ' + requireString + ';\n' +
-          'module.exports = {\n' +
-          '   ' + registryEntries.join( ',\n   ' ) + '\n' +
-          '};\n';
+function replaceRequire( string ) {
+   return string.replace( /"(require\([^)]+\))"/g, '$1' );
 }
 
-function exportStyles( stylesheetList ) {
-   return 'module.exports = ' + JSON.stringify( stylesheetList.toString() ) + ';';
-}
