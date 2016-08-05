@@ -50,23 +50,36 @@ module.exports = function( source ) {
       moduleReader( this, query[ 'json-loader' ], publicPath ) ||
       laxarTooling.jsonReader.create( logger ) );
 
-   const artifactsListing = laxarTooling.artifactsListing.create( logger, entries, {
+   const artifactCollector = laxarTooling.artifactCollector.create( logger, {
       projectPath,
       readJson: injectInputValue( this, source, readJson ),
-      requireCall: ( module, loader ) => {
+   } );
+
+   const resolveLoader = loader => './' + path.relative( loaderContext.context, require.resolve( loader ) );
+   const loaders = {
+      json: resolveLoader( 'json-loader' ),
+      raw: resolveLoader( 'raw-loader' )
+   };
+
+   const artifactListing = laxarTooling.artifactListing.create( logger, {
+      projectPath,
+      readJson: injectInputValue( this, source, readJson ),
+      requireFile: ( module, loader ) => {
          const modulePath = './' + path.relative( loaderContext.context, path.resolve( module ) );
-         const loaderName = {
-            json: 'json-loader',
-            raw: 'raw-loader'
-         }[ loader ];
-         const loaderPath = loaderName && path.relative( loaderContext.context, require.resolve( loaderName ) );
-         const resource = loader ? `!!./${loaderPath}!${modulePath}` : modulePath;
+         const loaderPath = loaders[ loader ];
+         const resource = loader ? `!!${loaderPath}!${modulePath}` : modulePath;
+
+         if( loader === 'url' ) {
+            return module;
+         }
 
          return () => `require( '${resource}' )`;
       }
    } );
 
-   artifactsListing.build().then( artifactsListing.serialize )
+   artifactCollector.collectArtifacts( entries )
+      .then( artifactListing.buildArtifacts )
+      .then( laxarTooling.serialize )
       .then( code => `module.exports = ${code};` )
       .then( success, done );
 
