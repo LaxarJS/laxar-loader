@@ -1,6 +1,6 @@
 {
   "name": "laxar-loader",
-  "version": "0.1.0",
+  "version": "0.2.0-pre",
   "description": "Webpack loader for LaxarJS artifacts",
   "homepage": "http://laxarjs.org",
   "authors": [],
@@ -27,7 +27,7 @@
   ],
   "dependencies": {
     "json-loader": "^0.5.4",
-    "laxar-tooling": "^0.2.0",
+    "laxar-tooling": "^0.3.0",
     "loader-utils": "^0.2.15",
     "raw-loader": "^0.5.1"
   },
