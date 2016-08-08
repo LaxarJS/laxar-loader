@@ -22,7 +22,7 @@ module.exports = function( source ) {
    const loaderContext = this;
    const query = loaderUtils.parseQuery( this.query );
    const flows = pickQuery( query.flows, query.flow, [] );
-   const themes = pickQuery( query.themes, query.theme, [ 'default' ] );
+   const themes = pickQuery( query.themes, query.theme, [] );
    const entries = [ { flows, themes } ];
 
    if( this[ __filename ] ) {
@@ -31,6 +31,10 @@ module.exports = function( source ) {
 
    if( this.cacheable ) {
       this.cacheable();
+   }
+
+   if( themes.indexOf( 'default' ) < 0 ) {
+      themes.push( 'default' );
    }
 
    const logger = {
@@ -46,6 +50,12 @@ module.exports = function( source ) {
       query.publicPath :
       this._compilation.outputOptions.publicPath;
 
+   const resolveLoader = loader => './' + path.relative( loaderContext.context, require.resolve( loader ) );
+   const loaders = {
+      json: resolveLoader( 'json-loader' ),
+      raw: resolveLoader( 'raw-loader' )
+   };
+
    const readJson = traceDependencies( this,
       moduleReader( this, query[ 'json-loader' ], publicPath ) ||
       laxarTooling.jsonReader.create( logger ) );
@@ -54,12 +64,6 @@ module.exports = function( source ) {
       projectPath,
       readJson: injectInputValue( this, source, readJson ),
    } );
-
-   const resolveLoader = loader => './' + path.relative( loaderContext.context, require.resolve( loader ) );
-   const loaders = {
-      json: resolveLoader( 'json-loader' ),
-      raw: resolveLoader( 'raw-loader' )
-   };
 
    const artifactListing = laxarTooling.artifactListing.create( logger, {
       projectPath,
@@ -85,7 +89,7 @@ module.exports = function( source ) {
 
    function projectPath( ref ) {
       return new Promise( function( resolve ) {
-         loaderContext.resolve( loaderContext.context, ref, function( err, result ) {
+         loaderContext.resolve( loaderContext.context, ref, ( err, result ) => {
             // webpack can only resolve things for which it has loaders.
             // to resolve a directory, we replace all aliases.
             const filename = err ?
@@ -136,9 +140,9 @@ function traceDependencies( loaderContext, fn ) {
 }
 
 function resolveAliases( string, aliases ) {
-   return Object.keys( aliases ).reduce( function( string, alias ) {
-      const pattern = new RegExp( '(^|/)' + alias + '($|/)', 'g' );
-      return string.replace( pattern, '$1' + aliases[ alias ] + '$2' );
+   return Object.keys( aliases ).reduce( ( string, alias ) => {
+      const pattern = new RegExp( '^' + alias + '($|/)', 'g' );
+      return string.replace( pattern, aliases[ alias ] + '$1' );
    }, string );
 }
 
