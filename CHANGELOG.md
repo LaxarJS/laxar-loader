@@ -2,6 +2,9 @@
 
 ## Last Changes
 
+
+## v0.3.0
+
 - [#4](https://github.com/jpommerening/laxar-loader/issues/4): allow loading artifacts directly (instead of starting from the flow)
 
 
