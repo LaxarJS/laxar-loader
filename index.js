@@ -6,24 +6,11 @@ const loaderUtils = require( 'loader-utils' );
 const laxarTooling = require( 'laxar-tooling' );
 const moduleReader = require( './lib/module_reader' );
 
-function pickQuery( pluralValue, singularValue, defaultValue ) {
-   if( pluralValue ) {
-      return Array.isArray( pluralValue ) ? pluralValue : [ pluralValue ];
-   }
-   if( singularValue ) {
-      return [ singularValue ];
-   }
-
-   return defaultValue;
-}
-
 /*eslint-disable consistent-return*/
 module.exports = function( source ) {
    const loaderContext = this;
    const query = loaderUtils.parseQuery( this.query );
-   const flows = pickQuery( query.flows, query.flow, [] );
-   const themes = pickQuery( query.themes, query.theme, [] );
-   const entries = [ { flows, themes } ];
+   const entries = [ buildEntry( query ) ];
 
    if( this[ __filename ] ) {
       return '';
@@ -31,10 +18,6 @@ module.exports = function( source ) {
 
    if( this.cacheable ) {
       this.cacheable();
-   }
-
-   if( themes.indexOf( 'default' ) < 0 ) {
-      themes.push( 'default' );
    }
 
    const logger = {
@@ -62,7 +45,7 @@ module.exports = function( source ) {
 
    const artifactCollector = laxarTooling.artifactCollector.create( logger, {
       projectPath,
-      readJson: injectInputValue( this, source, readJson ),
+      readJson: injectInputValue( this, source, readJson )
    } );
 
    const artifactListing = laxarTooling.artifactListing.create( logger, {
@@ -103,8 +86,39 @@ module.exports = function( source ) {
 
 };
 
-function isString( something ) {
-   return ( typeof something === 'string' ) || ( something instanceof String );
+function buildEntry( query ) {
+   const entry = {};
+
+   const entryKeys = {
+      flows: 'flow',
+      themes: 'theme',
+      pages: 'page',
+      layouts: 'layout',
+      widgets: 'widget',
+      controls: 'control'
+   };
+
+   Object.keys( entryKeys ).forEach( plural => {
+      const singular = entryKeys[ plural ];
+      entry[ plural ] = pickQuery( query[ plural ], query[ singular ] );
+   } );
+
+   if( entry.themes.indexOf( 'default' ) < 0 ) {
+      entry.themes.push( 'default' );
+   }
+
+   return entry;
+}
+
+function pickQuery( pluralValue, singularValue ) {
+   if( pluralValue ) {
+      return Array.isArray( pluralValue ) ? pluralValue : [ pluralValue ];
+   }
+   if( singularValue ) {
+      return [ singularValue ];
+   }
+
+   return [];
 }
 
 function injectInputValue( loaderContext, source, fn ) {
