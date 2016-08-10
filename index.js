@@ -45,12 +45,12 @@ module.exports = function( source ) {
 
    const artifactCollector = laxarTooling.artifactCollector.create( logger, {
       projectPath,
-      readJson: injectInputValue( this, source, readJson )
+      readJson: readJson
    } );
 
    const artifactListing = laxarTooling.artifactListing.create( logger, {
       projectPath,
-      readJson: injectInputValue( this, source, readJson ),
+      readJson: readJson,
       requireFile: ( module, loader ) => {
          const modulePath = './' + path.relative( loaderContext.context, path.resolve( module ) );
          const loaderPath = loaders[ loader ];
@@ -119,30 +119,6 @@ function pickQuery( pluralValue, singularValue ) {
    }
 
    return [];
-}
-
-function injectInputValue( loaderContext, source, fn ) {
-   return function( ref ) {
-      const filename = path.resolve( loaderContext.options.context || '', ref );
-
-      if( filename === loaderContext.resourcePath ) {
-         return inputValue( loaderContext, source );
-      }
-
-      return fn.apply( null, arguments );
-   };
-}
-
-function inputValue( loaderContext, source ) {
-   if( !loaderContext.inputValue ) {
-      try {
-         loaderContext.inputValue = [ loaderContext.exec( source, loaderContext.resourcePath ) ];
-      }
-      catch( err ) {
-         return Promise.reject( err );
-      }
-   }
-   return Promise.resolve( loaderContext.inputValue[ 0 ] );
 }
 
 function traceDependencies( loaderContext, fn ) {
