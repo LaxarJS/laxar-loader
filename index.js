@@ -131,7 +131,7 @@ function traceDependencies( loaderContext, fn ) {
 
 function resolveAliases( string, aliases ) {
    return Object.keys( aliases ).reduce( ( string, alias ) => {
-      const pattern = new RegExp( '^' + alias + '($|/)', 'g' );
+      const pattern = new RegExp( '^' + alias + '($|/)' );
       return string.replace( pattern, aliases[ alias ] + '$1' );
    }, string );
 }
