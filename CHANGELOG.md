@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#5](https://github.com/jpommerening/laxar-loader/issues/5): provide the importable entry point `laxar-loader/artifacts`
+
 
 ## v0.3.0
 
