@@ -2,7 +2,6 @@
    "extends": "laxarjs/node",
    "plugins": [ "node" ],
    "rules": {
-      "node/no-unsupported-features": [ "error", { "version": 4 } ],
-      "prefer-arrow-callback": "off"
+      "node/no-unsupported-features": [ "error", { "version": 4 } ]
    }
 }

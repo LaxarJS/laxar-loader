@@ -1,92 +1,158 @@
 'use strict';
 
+const fs = require( 'fs' );
 const path = require( 'path' ).posix;
 
 const loaderUtils = require( 'loader-utils' );
 const laxarTooling = require( 'laxar-tooling' );
-const moduleReader = require( './lib/module_reader' );
 
 /*eslint-disable consistent-return*/
-module.exports = function( source ) {
+module.exports = function( /* source, map */ ) {
    const loaderContext = this;
-   const query = loaderUtils.parseQuery( this.query );
-   const entries = [ buildEntry( query ) ];
+   const query = loaderUtils.parseQuery( loaderContext.query );
+   const entries = buildEntries( query );
 
-   if( this[ __filename ] ) {
-      return '';
+   if( loaderContext.cacheable ) {
+      loaderContext.cacheable();
    }
 
-   if( this.cacheable ) {
-      this.cacheable();
-   }
-
-   const logger = {
-      error: this.emitError
+   const log = {
+      error: loaderContext.emitError,
+      warn: loaderContext.emitWarning
    };
 
-   const done = this.async();
-   const success = function( result ) {
-      done( null, result );
-   };
+   const done = loaderContext.async();
 
-   const publicPath = typeof query.publicPath === 'string' ?
-      query.publicPath :
-      this._compilation.outputOptions.publicPath;
+   const configPath = typeof query.laxarConfig === 'string' ?
+      resolveRelative( loaderContext.context, query.laxarConfig ) :
+      resolveRelative( loaderContext.options.context || '', './laxar.config' );
 
-   const resolveLoader = loader => './' + path.relative( loaderContext.context, require.resolve( loader ) );
+   let configContext;
+
    const loaders = {
       json: resolveLoader( 'json-loader' ),
       raw: resolveLoader( 'raw-loader' )
    };
 
-   const readJson = traceDependencies( this,
-      moduleReader( this, query[ 'json-loader' ], publicPath ) ||
-      laxarTooling.jsonReader.create( logger ) );
+   configPath
+      .then( filename => {
+         configContext = path.dirname( filename );
+         return filename;
+      } )
+      .then( loadModule )
+      .then( config => {
+         const paths = {};
 
-   const artifactCollector = laxarTooling.artifactCollector.create( logger, {
-      projectPath,
-      readJson: readJson
-   } );
+         Object.keys( config.paths || [] ).forEach( key => {
+            paths[ key ] = path.resolve( configContext, config.paths[ key ] );
+         } );
 
-   const artifactListing = laxarTooling.artifactListing.create( logger, {
-      projectPath,
-      readJson: readJson,
-      requireFile: ( module, loader ) => {
-         const modulePath = './' + path.relative( loaderContext.context, path.resolve( module ) );
-         const loaderPath = loaders[ loader ];
-         const resource = loader ? `!!${loaderPath}!${modulePath}` : modulePath;
+         const artifactCollector = laxarTooling.artifactCollector.create( {
+            log,
+            paths,
+            resolve,
+            readJson
+         } );
 
-         if( loader === 'url' ) {
-            return module;
-         }
+         const artifactListing = laxarTooling.artifactListing.create( {
+            log,
+            paths,
+            resolve,
+            readJson,
+            requireFile: ( module, loader ) => {
+               const modulePath = path.relative( loaderContext.context, module );
+               const moduleRef = /^[\/.]/.test( modulePath ) ? modulePath : `./${modulePath}`;
+               const loaderPath = loaders[ loader ];
+               const resource = loaderPath ? `${loaderPath}!${moduleRef}` : moduleRef;
 
-         return () => `require( '${resource}' )`;
-      }
-   } );
+               if( loader === 'url' ) {
+                  return path.relative( loaderContext.options.context || '', module );
+               }
 
-   artifactCollector.collectArtifacts( entries )
-      .then( artifactListing.buildArtifacts )
-      .then( laxarTooling.serialize )
-      .then( code => `module.exports = ${code};` )
-      .then( success, done );
+               return () => `require( '${resource}' )`;
+            }
+         } );
 
-   function projectPath( ref ) {
-      return new Promise( function( resolve ) {
-         loaderContext.resolve( loaderContext.context, ref, ( err, result ) => {
-            // webpack can only resolve things for which it has loaders.
-            // to resolve a directory, we replace all aliases.
-            const filename = err ?
-               resolveAliases( ref, loaderContext.options.resolve.alias ) :
-               result;
+         return entries
+            .then( artifactCollector.collectArtifacts )
+            .then( artifactListing.buildArtifacts )
+            .then( laxarTooling.serialize )
+            .then( code => `module.exports = ${code};` )
+            .then( result => done( null, result ), done );
+      } );
 
-            resolve( path.relative( loaderContext.options.context || '', filename ) );
+   function readJson( filename ) {
+      return loadModule( loaders.json + '!' + filename );
+   }
+
+   function loadModule( filename ) {
+      return new Promise( ( resolve, reject ) => {
+         loaderContext.loadModule( filename, ( err, code ) => {
+            if( err ) {
+               reject( err );
+               return;
+            }
+            try {
+               resolve( loaderContext.exec( code, filename ) );
+            }
+            catch( err ) {
+               reject( err );
+            }
          } );
       } );
    }
 
+   function resolve( ref ) {
+      return resolveRelative( loaderContext.context, ref )
+         .then(
+            filename => path.resolve( loaderContext.context, filename ),
+            err => new Promise( ( resolve, reject ) => {
+               // webpack can only resolve things for which it has loaders.
+               // to resolve a directory, we replace all aliases.
+               const filename = resolveAliases( ref );
+
+               fs.access( filename, fs.F_OK, e => {
+                  if( e ) {
+                     reject( err );
+                  }
+                  else {
+                     resolve( filename );
+                  }
+               } );
+            } )
+         )
+         .then( filename => path.resolve( loaderContext.context, filename ) );
+   }
+
+   function resolveLoader( loader ) {
+      return './' + path.relative( loaderContext.context, require.resolve( loader ) );
+   }
+
+   function resolveRelative( context, ref ) {
+      return new Promise( ( resolve, reject ) => {
+         loaderContext.resolve( context, ref, ( err, filename ) => {
+            if( err ) {
+               reject( err );
+            }
+            else {
+               resolve( path.relative( loaderContext.context, filename ) );
+            }
+         } );
+      } );
+   }
+
+   function resolveAliases( string ) {
+      const context = loaderContext.options.context || '';
+      const aliases = loaderContext.options.resolve.alias || {};
+
+      return path.resolve( context, Object.keys( aliases ).reduce( ( string, alias ) => {
+         const pattern = new RegExp( '^' + alias + '($|/)' );
+         return string.replace( pattern, aliases[ alias ] + '$1' );
+      }, string ) );
+   }
 };
 
-function buildEntry( query ) {
+function buildEntries( query ) {
    const entry = {};
 
    const entryKeys = {
@@ -107,7 +173,7 @@ function buildEntry( query ) {
       entry.themes.push( 'default' );
    }
 
-   return entry;
+   return Promise.resolve( [ entry ] );
 }
 
 function pickQuery( pluralValue, singularValue ) {
@@ -119,20 +185,5 @@ function pickQuery( pluralValue, singularValue ) {
    }
 
    return [];
-}
-
-function traceDependencies( loaderContext, fn ) {
-   return function( ref ) {
-      const filename = path.resolve( loaderContext.options.context || '', ref );
-      loaderContext.addDependency( filename );
-      return fn.apply( null, [ filename ].concat( [].slice.call( arguments, 1 ) ) );
-   };
-}
-
-function resolveAliases( string, aliases ) {
-   return Object.keys( aliases ).reduce( ( string, alias ) => {
-      const pattern = new RegExp( '^' + alias + '($|/)' );
-      return string.replace( pattern, aliases[ alias ] + '$1' );
-   }, string );
 }
 
