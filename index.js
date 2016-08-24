@@ -44,7 +44,8 @@ module.exports = function( /* source, map */ ) {
          const paths = {};
 
          Object.keys( config.paths || [] ).forEach( key => {
-            paths[ key ] = path.resolve( configContext, config.paths[ key ] );
+            const p = config.paths[ key ];
+            paths[ key ] = p[ 0 ] === '.' ? path.resolve( configContext, p ) : p;
          } );
 
          const artifactCollector = laxarTooling.artifactCollector.create( {
