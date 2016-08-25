@@ -105,24 +105,20 @@ module.exports = function( /* source, map */ ) {
 
    function resolve( ref ) {
       return resolveRelative( loaderContext.context, ref )
-         .then(
-            filename => path.resolve( loaderContext.context, filename ),
-            err => new Promise( ( resolve, reject ) => {
-               // webpack can only resolve things for which it has loaders.
-               // to resolve a directory, we replace all aliases.
-               const filename = resolveAliases( ref );
+         .then( null, err => new Promise( ( resolve, reject ) => {
+            // webpack can only resolve things for which it has loaders.
+            // to resolve a directory, we replace all aliases.
+            const filename = resolveAliases( ref );
 
-               fs.access( filename, fs.F_OK, e => {
-                  if( e ) {
-                     reject( err );
-                  }
-                  else {
-                     resolve( filename );
-                  }
-               } );
-            } )
-         )
-         .then( filename => path.resolve( loaderContext.context, filename ) );
+            fs.access( filename, fs.F_OK, e => {
+               if( e ) {
+                  reject( err );
+               }
+               else {
+                  resolve( filename );
+               }
+            } );
+         } ) );
    }
 
    function resolveLoader( loader ) {
@@ -136,7 +132,7 @@ module.exports = function( /* source, map */ ) {
                reject( err );
             }
             else {
-               resolve( path.relative( loaderContext.context, filename ) );
+               resolve( filename );
             }
          } );
       } );
