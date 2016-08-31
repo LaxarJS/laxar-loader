@@ -27,26 +27,28 @@ module.exports = function( /* source, map */ ) {
       resolveRelative( loaderContext.context, query.laxarConfig ) :
       resolveRelative( loaderContext.options.context || '', './laxar.config' );
 
-   let configContext;
-
    const loaders = {
-      json: resolveLoader( 'json-loader' ),
-      raw: resolveLoader( 'raw-loader' )
+      json: resolveLoader( './ensure-json' ),
+      content: resolveLoader( './ensure-content' ),
+      url: resolveLoader( './ensure-url' )
    };
 
    configPath
-      .then( filename => {
-         configContext = path.dirname( filename );
-         return filename;
-      } )
-      .then( loadModule )
-      .then( config => {
+      .then( filename => loadModule( filename ).then( config => {
          const paths = {};
+         const context = path.dirname( filename );
 
          Object.keys( config.paths || [] ).forEach( key => {
             const p = config.paths[ key ];
-            paths[ key ] = p[ 0 ] === '.' ? path.resolve( configContext, p ) : p;
+            paths[ key ] = p[ 0 ] === '.' ? path.resolve( context, p ) : p;
          } );
+
+         return {
+            paths
+         };
+      } ) )
+      .then( config => {
+         const paths = config.paths;
 
          const artifactCollector = laxarTooling.artifactCollector.create( {
             log,
@@ -66,10 +68,6 @@ module.exports = function( /* source, map */ ) {
                const loaderPath = loaders[ loader ];
                const resource = loaderPath ? `${loaderPath}!${moduleRef}` : moduleRef;
 
-               if( loader === 'url' ) {
-                  return path.relative( loaderContext.options.context || '', module );
-               }
-
                return () => `require( '${resource}' )`;
             }
          } );
@@ -86,9 +84,11 @@ module.exports = function( /* source, map */ ) {
       return loadModule( loaders.json + '!' + filename );
    }
 
-   function loadModule( filename ) {
+   function loadModule( module ) {
+      const filename = module.split( '!' ).pop().split( '?' ).shift();
+
       return new Promise( ( resolve, reject ) => {
-         loaderContext.loadModule( filename, ( err, code ) => {
+         loaderContext.loadModule( module, ( err, code ) => {
             if( err ) {
                reject( err );
                return;
