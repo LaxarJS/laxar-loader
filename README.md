@@ -4,10 +4,44 @@
 
 ## Example
 
-`init.js`:
+Import the `artifacts` entry point in your `init.js`.
+
+You could also use `laxar-loader` directly, but since it does not need a specific entry
+module, we pre-rolled this one for your convenience:
 
 ```js
-import artifacts from 'laxar-loader?flow=main&theme=rainbows-and-unicorns!./package.json';
+import { bootstrap } from 'laxar';
+import artifacts from 'laxar-loader/artifacts?flow=main&theme=rainbows-and-unicorns';
+
+// ... later ...
+
+bootstrap( element, {
+   widgetAdapters,
+   configuration,
+   artifacts
+} );
+```
+
+## Configuration
+
+Place a `laxar.config.js` file into your project root directory.
+This is either the directory where your `webpack.config.js` is, or the directory configured
+with webpack's [`context` option][webpack-context].
+
+The `laxar.config.js` file should look like this:
+
+```js
+module.exports = {
+   paths: {
+      flows: './path/to/flows', // default: 'flows'
+      themes: './path/to/themes', // default: 'themes'
+      pages: './path/to/pages', // default: 'pages'
+      layouts: './path/to/layouts', // default: 'layouts'
+      widgets: './path/to/widgets', // default: 'widgets'
+      controls: './path/to/controls', // default: 'controls'
+      'default-theme': './path/to/default.theme'
+   }
+};
 ```
 
 ## Query options (aka the stuff after the "?")
@@ -25,5 +59,67 @@ Refer to the [webpack documentation][parse-query] for details about the loader s
 
 The loaded artifacts listing can then be used to [bootstrap LaxarJS][bootstrap].
 
+## Interaction with other loaders
+
+When building the artifacts listing, the loader collects JSON, HTML and CSS files and generates
+require calls so they will be present in your webpack bundle. If no loaders are configured for the
+required files, `laxar-loader` will use the [`json-loader`][] for JSON files, [`raw-loader`][] for HTML
+and will write out the resource path for CSS files.
+
+If you want to leverage the power of webpack to pre-process these artifacts, just add your loaders to
+the webpack configuration and they will be used to load the artifacts' assets. There are just a few rules
+your loaders should obey:
+
+- Template sources should be valid HTML strings after passing through your loaders
+- Style sources should be URLs or already be loaded via the [`style-loader`][]
+
+Example:
+
+```js
+module.exports = {
+   module: {
+      loaders: [
+         {
+            test: /\.(css|gif|jpe?g|png|ttf|woff2?|svg|eot|otf)(\?.*)?$/,
+            loader: 'file'
+         },
+         {
+            test: /\.(gif|jpe?g|png|svg)$/,
+            loader: 'img?progressive=true'
+         },
+         {
+            test: /\.css$/,
+            loader: 'style!css'
+         },
+         {
+            test: /\/default.theme\/.*\.scss$/,
+            loader: 'style!css!sass'
+         },
+         {
+            test: /\/rainbows-and-unicorns\.theme\/.*\.scss$/,
+            loader: 'style!css!sass?config=sassLoaderRainbows'
+      ]
+   },
+   fileLoader: {
+      name: 'assets/[name]-[sha1:hash:hex:6].[ext]'
+   },
+   sassLoader: {
+      includePaths: [
+         './themes/default.theme/scss',
+         './bower_components/bootstrap-sass-official/assets/stylesheets',
+         './bower_components'
+      ].map( p => path.resolve( __dirname, p ) )
+   },
+   sassLoaderRainbows: {
+      includePaths: [
+         './themes/rainbows-and-unicorns.theme/scss',
+         './bower_components/bootstrap-sass-official/assets/stylesheets',
+         './bower_components'
+      ].map( p => path.resolve( __dirname, p ) )
+   }
+};
+```
+
 [bootstrap]: https://github.com/LaxarJS/laxar
 [parse-query]: https://github.com/webpack/loader-utils#parsequery
+[webpack-context]: http://webpack.github.io/docs/configuration.html#context

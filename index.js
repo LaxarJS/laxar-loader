@@ -6,7 +6,6 @@ const path = require( 'path' ).posix;
 const loaderUtils = require( 'loader-utils' );
 const laxarTooling = require( 'laxar-tooling' );
 
-/*eslint-disable consistent-return*/
 module.exports = function( /* source, map */ ) {
    const loaderContext = this;
    const query = loaderUtils.parseQuery( loaderContext.query );
