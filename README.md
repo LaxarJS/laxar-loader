@@ -4,14 +4,14 @@
 
 ## Example
 
-Import the `artifacts` entry point in your `init.js`.
 
-You could also use `laxar-loader` directly, but since it does not need a specific entry
-module, we pre-rolled this one for your convenience:
+You could use `laxar-loader` directly, but since it does not need a specific entry
+module, we pre-rolled the `artifacts` entry point for you and placed it into this
+module. Import the entry point in your `init.js`:
 
 ```js
-import { bootstrap } from 'laxar';
 import artifacts from 'laxar-loader/artifacts?flow=main&theme=rainbows-and-unicorns';
+import { bootstrap } from 'laxar';
 
 // ... later ...
 
@@ -70,8 +70,8 @@ If you want to leverage the power of webpack to pre-process these artifacts, jus
 the webpack configuration and they will be used to load the artifacts' assets. There are just a few rules
 your loaders should obey:
 
-- Template sources should be valid HTML strings after passing through your loaders
-- Style sources should be URLs or already be loaded via the [`style-loader`][]
+- Template sources should be valid HTML strings after passing through your loaders.
+- Style sources should be URLs ([`file-`][file-loader] or [`url-loader`][]) or be loaded outside _Laxar_ via the [`style-loader`][].
 
 Example:
 
@@ -123,3 +123,8 @@ module.exports = {
 [bootstrap]: https://github.com/LaxarJS/laxar
 [parse-query]: https://github.com/webpack/loader-utils#parsequery
 [webpack-context]: http://webpack.github.io/docs/configuration.html#context
+[raw-loader]: https://github.com/webpack/raw-loader
+[json-loader]: https://github.com/webpack/json-loader
+[style-loader]: https://github.com/webpack/style-loader
+[file-loader]: https://github.com/webpack/file-loader
+[url-loader]: https://github.com/webpack/url-loader
