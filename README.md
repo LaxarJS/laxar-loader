@@ -63,15 +63,16 @@ The loaded artifacts listing can then be used to [bootstrap LaxarJS][bootstrap].
 
 When building the artifacts listing, the loader collects JSON, HTML and CSS files and generates
 require calls so they will be present in your webpack bundle. If no loaders are configured for the
-required files, `laxar-loader` will use the [`json-loader`][] for JSON files, [`raw-loader`][] for HTML
-and will write out the resource path for CSS files.
+required files, `laxar-loader` will use the [`json-loader`][json-loader] for JSON files,
+[`raw-loader`][raw-loader] for HTML and will write out the resource path for CSS files.
 
 If you want to leverage the power of webpack to pre-process these artifacts, just add your loaders to
 the webpack configuration and they will be used to load the artifacts' assets. There are just a few rules
 your loaders should obey:
 
 - Template sources should be valid HTML strings after passing through your loaders.
-- Style sources should be URLs ([`file-`][file-loader] or [`url-loader`][]) or be loaded outside _Laxar_ via the [`style-loader`][].
+- Style sources should be URLs ([`file-`][file-loader] or [`url-loader`][url-loader]) or be loaded
+  outside _Laxar_ via the [`style-loader`][style-loader].
 
 Example:
 
