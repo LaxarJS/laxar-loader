@@ -1,4 +1,4 @@
-# laxar-loader
+# laxar-loader [![Build Status](https://travis-ci.org/LaxarJS/laxar-loader.svg?branch=master)](https://travis-ci.org/LaxarJS/laxar-loader)
 
 > webpack loader for LaxarJS
 
