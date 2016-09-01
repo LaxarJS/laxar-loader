@@ -2,8 +2,10 @@
 
 ## Last Changes
 
+- [#10](https://github.com/jpommerening/laxar-loader/issues/10): fix loading of CSS files and `assetUrls`
 
-# v0.4.0
+
+## v0.4.0
 
 - [#8](https://github.com/jpommerening/laxar-loader/issues/8): read `laxar.config.js` for path configuration, update to `laxar-tooling` v0.4.1
 - [#7](https://github.com/jpommerening/laxar-loader/issues/7): resolve laxar-paths only at the beginning of the path

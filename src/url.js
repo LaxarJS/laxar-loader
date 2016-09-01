@@ -24,6 +24,6 @@ module.exports.pitch = function( remainingRequest /*, precedingRequest, data */ 
       const context = this.options.context || '';
       const resource = path.relative( context, remainingRequest );
 
-      this.callback( `module.exports = ${JSON.stringify( resource )};` );
+      this.callback( null, `module.exports = ${JSON.stringify( resource )};` );
    }
 };
