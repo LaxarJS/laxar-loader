@@ -1,6 +1,9 @@
+/**
+ * Copyright 2016 aixigo AG
+ * Released under the MIT license.
+ * http://laxarjs.org/license
+ */
 'use strict';
-
-const path = require( 'path' );
 
 module.exports = function( content, map ) {
    if( this.cacheable ) {
@@ -16,9 +19,9 @@ module.exports.pitch = function( remainingRequest /*, precedingRequest, data */ 
    }
 
    if( remainingRequest.indexOf( '!' ) < 0 ) {
-      const context = this.options.context || '';
-      const resource = path.relative( context, remainingRequest );
+      const loader = require.resolve( 'json-loader' );
+      const request = `-!${loader}!${remainingRequest}`;
 
-      this.callback( `module.exports = ${JSON.stringify( resource )};` );
+      this.loadModule( request, this.async() );
    }
 };

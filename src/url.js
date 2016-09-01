@@ -1,4 +1,11 @@
+/**
+ * Copyright 2016 aixigo AG
+ * Released under the MIT license.
+ * http://laxarjs.org/license
+ */
 'use strict';
+
+import { posix as path } from 'path';
 
 module.exports = function( content, map ) {
    if( this.cacheable ) {
@@ -14,9 +21,9 @@ module.exports.pitch = function( remainingRequest /*, precedingRequest, data */ 
    }
 
    if( remainingRequest.indexOf( '!' ) < 0 ) {
-      const loader = require.resolve( 'json-loader' );
-      const request = `-!${loader}!${remainingRequest}`;
+      const context = this.options.context || '';
+      const resource = path.relative( context, remainingRequest );
 
-      this.loadModule( request, this.async() );
+      this.callback( `module.exports = ${JSON.stringify( resource )};` );
    }
 };

@@ -1,7 +1,6 @@
 {
    "extends": "laxarjs/node",
-   "plugins": [ "node" ],
    "rules": {
-      "node/no-unsupported-features": [ "error", { "version": 4 } ]
+      "no-restricted-imports": "off"
    }
 }

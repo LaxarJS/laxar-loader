@@ -1,10 +1,14 @@
+/**
+ * Copyright 2016 aixigo AG
+ * Released under the MIT license.
+ * http://laxarjs.org/license
+ */
 'use strict';
 
-const fs = require( 'fs' );
-const path = require( 'path' ).posix;
-
-const loaderUtils = require( 'loader-utils' );
-const laxarTooling = require( 'laxar-tooling' );
+import fs from 'fs';
+import { posix as path } from 'path';
+import loaderUtils from 'loader-utils';
+import laxarTooling from 'laxar-tooling';
 
 module.exports = function( /* source, map */ ) {
    const loaderContext = this;
@@ -27,9 +31,9 @@ module.exports = function( /* source, map */ ) {
       resolveRelative( loaderContext.options.context || '', './laxar.config' );
 
    const loaders = {
-      json: resolveLoader( './ensure-json' ),
-      content: resolveLoader( './ensure-content' ),
-      url: resolveLoader( './ensure-url' )
+      json: require.resolve( './json' ),
+      content: require.resolve( './content' ),
+      url: require.resolve( './url' )
    };
 
    configPath
@@ -43,6 +47,7 @@ module.exports = function( /* source, map */ ) {
          } );
 
          return {
+            ...config,
             paths
          };
       } ) )
@@ -61,14 +66,7 @@ module.exports = function( /* source, map */ ) {
             paths,
             resolve,
             readJson,
-            requireFile: ( module, loader ) => {
-               const modulePath = path.relative( loaderContext.context, module );
-               const moduleRef = /^[\/.]/.test( modulePath ) ? modulePath : `./${modulePath}`;
-               const loaderPath = loaders[ loader ];
-               const resource = loaderPath ? `${loaderPath}!${moduleRef}` : moduleRef;
-
-               return () => `require( '${resource}' )`;
-            }
+            requireFile
          } );
 
          return entries
@@ -80,14 +78,21 @@ module.exports = function( /* source, map */ ) {
       } );
 
    function readJson( filename ) {
-      return loadModule( loaders.json + '!' + filename );
+      return loadModule( `${loaders.json}!${filename}` );
    }
 
-   function loadModule( module ) {
-      const filename = module.split( '!' ).pop().split( '?' ).shift();
+   function requireFile( module, type ) {
+      const loader = loaders[ type ];
+      const request = loader ? `${loader}!${module}` : module;
+
+      return () => `require( ${loaderUtils.stringifyRequest( loaderContext, request )} )`;
+   }
+
+   function loadModule( request ) {
+      const filename = request.split( '!' ).pop().split( '?' ).shift();
 
       return new Promise( ( resolve, reject ) => {
-         loaderContext.loadModule( module, ( err, code ) => {
+         loaderContext.loadModule( request, ( err, code ) => {
             if( err ) {
                reject( err );
                return;
@@ -109,6 +114,8 @@ module.exports = function( /* source, map */ ) {
             // to resolve a directory, we replace all aliases.
             const filename = resolveAliases( ref );
 
+            // if the file exists, resolve with the the filename, otherwise
+            // reject with the original error
             fs.access( filename, fs.F_OK, e => {
                if( e ) {
                   reject( err );
@@ -118,10 +125,6 @@ module.exports = function( /* source, map */ ) {
                }
             } );
          } ) );
-   }
-
-   function resolveLoader( loader ) {
-      return './' + path.relative( loaderContext.context, require.resolve( loader ) );
    }
 
    function resolveRelative( context, ref ) {
