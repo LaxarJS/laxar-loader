@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+## v0.4.1
+
 - [#10](https://github.com/jpommerening/laxar-loader/issues/10): fix loading of CSS files and `assetUrls`
 
 
