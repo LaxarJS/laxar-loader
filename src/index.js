@@ -73,9 +73,12 @@ module.exports = function( /* source, map */ ) {
             .then( artifactCollector.collectArtifacts )
             .then( artifactListing.buildArtifacts )
             .then( laxarTooling.serialize )
-            .then( code => `module.exports = ${code};` )
-            .then( result => done( null, result ), done );
-      } );
+            .then( code => `module.exports = ${code};` );
+      } )
+      .then(
+         result => done( null, result ),
+         error => done( error )
+      );
 
    function readJson( filename ) {
       return loadModule( `${loaders.json}!${filename}` );
