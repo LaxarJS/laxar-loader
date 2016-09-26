@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#13](https://github.com/jpommerening/laxar-loader/issues/13): throw an error when the `laxar.config` can't be resolved, instead of timing out
+
 ## v0.4.1
 
 - [#10](https://github.com/jpommerening/laxar-loader/issues/10): fix loading of CSS files and `assetUrls`
