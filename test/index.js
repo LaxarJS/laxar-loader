@@ -1,3 +1,4 @@
+import vm from 'vm';
 import path from 'path';
 import webpack from 'webpack';
 import defaults from './webpack.config.js';
@@ -36,7 +37,11 @@ describe( 'laxar-loader', () => {
             },
             'components/widgets/test-widget/': {
                'widget.json': '{ "name": "test-widget", "controls": [ "test-control" ] }',
-               'test-widget.js': 'module.exports = function TestWidget() {};'
+               'test-widget.js': 'module.exports = function TestWidget() {};',
+               'default.theme': {
+                  'test-widget.html': '<blink>test-widget</blink>',
+                  'css/test-widget.css': 'blink { color: deeppink; }'
+               }
             },
             'components/controls/test-control/': {
                'control.json': '{ "name": "test-control" }',
@@ -45,24 +50,10 @@ describe( 'laxar-loader', () => {
          }
       } );
 
-      compiler.run( ( err, stats ) => {
+      compileAndRun( compiler, ( err, result ) => {
          if( err ) {
             return done( err );
          }
-         if( stats && stats.compilation && stats.compilation.errors.length ) {
-            return done( stats.compilation.errors[ 0 ] );
-         }
-
-         const fs = compiler.outputFileSystem;
-         const bundle = path.join( compiler.options.output.path, compiler.options.output.filename );
-         const library = compiler.options.output.library;
-
-         expect( fs.existsSync( bundle ) ).to.eql( true );
-
-         const code = fs.readFileSync( bundle, 'utf-8' );
-
-         // eslint-disable-next-line no-new-func
-         const result = new Function( `${code}; return ${library};` )();
 
          expect( result ).to.have.all.keys( [
             'aliases',
@@ -80,3 +71,29 @@ describe( 'laxar-loader', () => {
    } );
 
 } );
+
+function compileAndRun( compiler, done ) {
+   compiler.run( ( err, stats ) => {
+      if( err ) {
+         done( err );
+         return;
+      }
+      if( stats && stats.compilation && stats.compilation.errors.length ) {
+         done( stats.compilation.errors[ 0 ] );
+         return;
+      }
+
+      try {
+         const sandbox = {};
+         const bundle = path.join( compiler.options.output.path, compiler.options.output.filename );
+         const library = compiler.options.output.library;
+         const code = compiler.outputFileSystem.readFileSync( bundle, 'utf-8' );
+
+         vm.runInNewContext( code, sandbox );
+         done( null, sandbox[ library ] );
+      }
+      catch( err ) {
+         done( err );
+      }
+   } );
+}
