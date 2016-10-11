@@ -17,8 +17,9 @@
   "scripts": {
     "prepublish": "npm run lint && npm run build",
     "build": "babel -d lib src",
-    "test": "npm run-script lint",
-    "lint": "eslint src"
+    "test": "mocha --compilers js:babel-register",
+    "posttest": "npm run lint",
+    "lint": "eslint src test"
   },
   "keywords": [
     "laxar",
@@ -39,7 +40,10 @@
     "babel-plugin-transform-object-rest-spread": "^6.8.0",
     "babel-preset-es2015": "^6.13.2",
     "babel-register": "^6.11.6",
+    "enhanced-resolve": "^2.3.0",
     "eslint": "^3.0.1",
-    "eslint-config-laxarjs": "^0.3.0"
+    "eslint-config-laxarjs": "^0.3.0",
+    "memory-fs": "^0.3.0",
+    "mocha": "^3.0.2"
   }
 }
