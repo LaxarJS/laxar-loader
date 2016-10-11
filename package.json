@@ -44,6 +44,7 @@
     "eslint": "^3.0.1",
     "eslint-config-laxarjs": "^0.3.0",
     "memory-fs": "^0.3.0",
-    "mocha": "^3.0.2"
+    "mocha": "^3.0.2",
+    "webpack": "^1.13.2"
   }
 }
