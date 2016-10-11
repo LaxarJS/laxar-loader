@@ -5,7 +5,6 @@
  */
 'use strict';
 
-import fs from 'fs';
 import { posix as path } from 'path';
 import loaderUtils from 'loader-utils';
 import laxarTooling from 'laxar-tooling';
@@ -119,7 +118,7 @@ module.exports = function( /* source, map */ ) {
 
             // if the file exists, resolve with the the filename, otherwise
             // reject with the original error
-            fs.access( filename, fs.F_OK, e => {
+            loaderContext._compiler.inputFileSystem.stat( filename, e => {
                if( e ) {
                   reject( err );
                }
