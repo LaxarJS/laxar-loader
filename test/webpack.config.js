@@ -8,18 +8,17 @@ module.exports = {
    context: '/test',
    output: {
       path: '/test',
-      filename: 'bundle.js'
+      filename: 'bundle.js',
+      library: 'test'
    },
    resolve: {
       root: '/test'
    },
    resolveLoader: {
       root: [
-         path.join( __dirname, '..' )
-      ],
-      alias: {
-         'laxar-loader': path.join( __dirname, '../src/index.js' )
-      }
+         path.join( __dirname, '..' ),
+         path.join( __dirname, '..', '..' )
+      ]
    },
    module: {
       loaders: []
@@ -30,7 +29,7 @@ module.exports = {
             // execute after the NodeEnvironmentPlugin and mock the filesystem access
             compiler.plugin( 'after-environment', () => {
                const inputFS = new MemoryFS();
-               const outputFS = inputFS;
+               const outputFS = new MemoryFS();
                const contextFS = fs;
                const loaderFS = fs;
 
@@ -59,6 +58,7 @@ function fillDirectory( fs, directory, data ) {
       const content = data[ name ];
 
       if( typeof content === 'string' ) {
+         fs.mkdirpSync( path.dirname( file ) );
          fs.writeFileSync( file, content, 'utf-8' );
       }
       else if( typeof content === 'object' ) {
