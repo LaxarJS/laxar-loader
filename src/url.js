@@ -5,6 +5,7 @@
  */
 'use strict';
 
+import loaderUtils from 'loader-utils';
 import { posix as path } from 'path';
 
 module.exports = function( content, map ) {
@@ -25,5 +26,12 @@ module.exports.pitch = function( remainingRequest /*, precedingRequest, data */ 
       const resource = path.relative( context, remainingRequest );
 
       this.callback( null, `module.exports = ${JSON.stringify( resource )};` );
+   }
+   else {
+      const resource = loaderUtils.stringifyRequest( this, `!!${remainingRequest}` );
+
+      this.callback( null, `var resource = require( ${resource} );\n` +
+                           'module.exports = typeof resource === \'string\' ? resource : null;' );
+
    }
 };

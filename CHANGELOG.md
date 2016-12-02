@@ -2,9 +2,11 @@
 
 ## Last Changes
 
+- [#12](https://github.com/jpommerening/laxar-loader/issues/12): avoid getting module objects for artifact URLs
 - [#9](https://github.com/LaxarJS/laxar-loader/issues/9): the webpack loader is now tested with TravisCI
 - [#14](https://github.com/LaxarJS/laxar-loader/issues/14): avoid use of node's `fs` module in favor of webpack's input filesystem
 - [#13](https://github.com/LaxarJS/laxar-loader/issues/13): throw an error when the `laxar.config` can't be resolved, instead of timing out
+
 
 ## v0.4.1
 
