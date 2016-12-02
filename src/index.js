@@ -147,7 +147,7 @@ module.exports = function( /* source, map */ ) {
       const aliases = loaderContext.options.resolve.alias || {};
 
       return path.resolve( context, Object.keys( aliases ).reduce( ( string, alias ) => {
-         const suffix = pattern.substr( -1 ) === '$' ? '' : '($|/)';
+         const suffix = alias.substr( -1 ) === '$' ? '' : '($|/)';
          const pattern = new RegExp( `^${alias}${suffix}` );
          return string.replace( pattern, aliases[ alias ] + '$1' );
       }, string ) );
