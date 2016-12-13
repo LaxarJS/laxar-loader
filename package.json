@@ -30,7 +30,7 @@
     "stylesheets"
   ],
   "dependencies": {
-    "laxar-tooling": "^0.5.0",
+    "laxar-tooling": "^0.5.0-alpha",
     "loader-utils": "^0.2.15",
     "json-loader": "^0.5.4",
     "raw-loader": "^0.5.1"
