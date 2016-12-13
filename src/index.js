@@ -60,6 +60,10 @@ module.exports = function( /* source, map */ ) {
             readJson
          } );
 
+         const artifactValidator = laxarTooling.artifactValidator.create( {
+            log
+         } );
+
          const artifactListing = laxarTooling.artifactListing.create( {
             log,
             paths,
@@ -70,6 +74,7 @@ module.exports = function( /* source, map */ ) {
 
          return entries
             .then( artifactCollector.collectArtifacts )
+            .then( artifactValidator.validateArtifacts )
             .then( artifactListing.buildArtifacts )
             .then( laxarTooling.serialize )
             .then( code => `module.exports = ${code};` );

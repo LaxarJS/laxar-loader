@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#17](https://github.com/LaxarJS/laxar-loader/issues/17): artifacts are now validation with JSON schema before they are serialized
+  + **BREAKING CHANGE:** see ticket for details
 - [#16](https://github.com/LaxarJS/laxar-loader/issues/16): updated to `laxar-tooling` v0.5.0
   + **BREAKING CHANGE:** see ticket for details
 - [#15](https://github.com/LaxarJS/laxar-loader/issues/15): handle webpack aliases ending in `$` properly
