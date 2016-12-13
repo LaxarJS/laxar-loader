@@ -2,8 +2,10 @@
 
 ## Last Changes
 
-- [#15](https://github.com/jpommerening/laxar-loader/issues/15): handle webpack aliases ending in `$` properly
-- [#12](https://github.com/jpommerening/laxar-loader/issues/12): avoid getting module objects for artifact URLs
+- [#16](https://github.com/LaxarJS/laxar-loader/issues/16): updated to `laxar-tooling` v0.5.0
+  + **BREAKING CHANGE:** see ticket for details
+- [#15](https://github.com/LaxarJS/laxar-loader/issues/15): handle webpack aliases ending in `$` properly
+- [#12](https://github.com/LaxarJS/laxar-loader/issues/12): avoid getting module objects for artifact URLs
 - [#9](https://github.com/LaxarJS/laxar-loader/issues/9): the webpack loader is now tested with TravisCI
 - [#14](https://github.com/LaxarJS/laxar-loader/issues/14): avoid use of node's `fs` module in favor of webpack's input filesystem
 - [#13](https://github.com/LaxarJS/laxar-loader/issues/13): throw an error when the `laxar.config` can't be resolved, instead of timing out

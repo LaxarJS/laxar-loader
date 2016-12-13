@@ -19,7 +19,9 @@ describe( 'laxar-loader', () => {
                   themes: 'components/themes',
                   layouts: 'components/layouts',
                   widgets: 'components/widgets',
-                  controls: 'components/controls'
+                  controls: 'components/controls',
+                  schemas: 'schemas',
+                  'default-theme': 'default.theme'
                }
             } ) + ';',
             'init.js': 'module.exports = require( \'laxar-loader?flow=main!dummy.js\' );',
@@ -46,6 +48,35 @@ describe( 'laxar-loader', () => {
             'components/controls/test-control/': {
                'control.json': '{ "name": "test-control" }',
                'test-control.js': 'module.exports = function TestControl() {};'
+            },
+            'schemas/': {
+               'flow.json': JSON.stringify( {
+                  $schema: 'http://json-schema.org/draft-04/schema#',
+                  type: 'object',
+                  required: [ 'places' ]
+               } ),
+               'theme.json': JSON.stringify( {
+                  $schema: 'http://json-schema.org/draft-04/schema#',
+                  type: 'object'
+               } ),
+               'page.json': JSON.stringify( {
+                  $schema: 'http://json-schema.org/draft-04/schema#',
+                  type: 'object'
+               } ),
+               'layout.json': JSON.stringify( {
+                  $schema: 'http://json-schema.org/draft-04/schema#',
+                  type: 'object'
+               } ),
+               'widget.json': JSON.stringify( {
+                  $schema: 'http://json-schema.org/draft-04/schema#',
+                  type: 'object',
+                  required: [ 'name' ]
+               } ),
+               'control.json': JSON.stringify( {
+                  $schema: 'http://json-schema.org/draft-04/schema#',
+                  type: 'object',
+                  required: [ 'name' ]
+               } )
             }
          }
       } );
@@ -68,7 +99,7 @@ describe( 'laxar-loader', () => {
          return done();
       } );
 
-   } );
+   } ).timeout( 5000 );
 
 } );
 
