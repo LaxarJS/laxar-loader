@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#21](https://github.com/LaxarJS/laxar-loader/issues/21): bump laxar-tooling version: pre-assemble pages at build-time
+
 
 ## v0.5.0-alpha.0
 
