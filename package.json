@@ -30,10 +30,11 @@
     "stylesheets"
   ],
   "dependencies": {
+    "json-loader": "^0.5.4",
     "laxar-tooling": "^0.5.0",
     "loader-utils": "^0.2.15",
-    "json-loader": "^0.5.4",
-    "raw-loader": "^0.5.1"
+    "raw-loader": "^0.5.1",
+    "webpack": "^2.2.0-rc.6"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
