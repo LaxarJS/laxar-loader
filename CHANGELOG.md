@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#22](https://github.com/LaxarJS/laxar-loader/issues/22): upgraded to webpack 2
+
 
 ## v0.5.0
 
