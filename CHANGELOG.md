@@ -2,6 +2,7 @@
 
 ## Last Changes
 
+- [#23](https://github.com/LaxarJS/laxar-loader/issues/23): allow to omit the `laxar.config.js` file
 - [#22](https://github.com/LaxarJS/laxar-loader/issues/22): upgraded to webpack 2
 
 

@@ -9,6 +9,8 @@ import { posix as path } from 'path';
 import loaderUtils from 'loader-utils';
 import laxarTooling from 'laxar-tooling';
 
+const DEFAULT_CONFIG = {};
+
 module.exports = function( /* source, map */ ) {
    const loaderContext = this;
    const query = loaderUtils.parseQuery( loaderContext.query );
@@ -49,7 +51,7 @@ module.exports = function( /* source, map */ ) {
             ...config,
             paths
          };
-      } ) )
+      } ), () => DEFAULT_CONFIG )
       .then( config => {
          const paths = config.paths;
 
