@@ -2,6 +2,9 @@
 
 ## Last Changes
 
+
+## v2.0.0-alpha.1
+
 - [#24](https://github.com/LaxarJS/laxar-loader/issues/24): load widgets and controls according to webpack module resolve strategy
 
 
