@@ -1854,9 +1854,9 @@ kind-of@^3.0.2:
   dependencies:
     is-buffer "^1.0.2"
 
-laxar-tooling@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/laxar-tooling/-/laxar-tooling-0.5.0.tgz#f45816286219f3c443596ecad93bfcab77b8a9c7"
+laxar-tooling@^0.6.0-alpha.0:
+  version "0.6.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/laxar-tooling/-/laxar-tooling-0.6.0-alpha.0.tgz#8839efec80f1b0f267eba51640254e8894df581d"
   dependencies:
     ajv "^4.10.0"
     jsonlint "^1.6.2"

@@ -90,9 +90,15 @@ module.exports = function( /* source, map */ ) {
       return loadModule( `${loaders.json}!${filename}` );
    }
 
-   function requireFile( module, type ) {
+   function requireFile( module, type, name ) {
       const loader = loaders[ type ];
       const request = loader ? `${loader}!${module}` : module;
+
+      if( type === 'module' ) {
+         return resolveRelative( loaderContext.context, module )
+            .then( null, () => resolveRelative( loaderContext.context, `${module}/${name}` ) )
+            .then( path => () => `require( ${loaderUtils.stringifyRequest( loaderContext, path )} )` );
+      }
 
       return () => `require( ${loaderUtils.stringifyRequest( loaderContext, request )} )`;
    }
