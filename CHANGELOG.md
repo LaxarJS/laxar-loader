@@ -2,6 +2,9 @@
 
 ## Last Changes
 
+
+## v2.0.0-alpha.2
+
 - [#26](https://github.com/LaxarJS/laxar-loader/issues/26): bump laxar-tooling version: new default paths
 
 
