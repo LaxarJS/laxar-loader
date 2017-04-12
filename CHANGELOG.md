@@ -2,6 +2,9 @@
 
 ## Last Changes
 
+
+## v2.0.0-alpha.3
+
 - [#25](https://github.com/LaxarJS/laxar-loader/issues/25): a new entry point `debug-info` has been added
    + NEW FEATURE: see ticket for details
 
