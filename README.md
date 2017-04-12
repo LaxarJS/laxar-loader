@@ -5,21 +5,20 @@
 ## Example
 
 
-You could use `laxar-loader` directly, but since it does not need a specific entry
-module, we pre-rolled the `artifacts` entry point for you and placed it into this
-module. Import the entry point in your `init.js`:
+You could use `laxar-loader` directly, but since it does not need a specific entry module,
+we pre-rolled the `artifacts` and `debug-info` entry points for you and placed them into this
+module. Import the entry points in your `init.js`:
 
 ```js
 import artifacts from 'laxar-loader/artifacts?flow=main&theme=rainbows-and-unicorns';
-import { bootstrap } from 'laxar';
+import debugInfo from 'laxar-loader/debug-info?flow=main&theme=rainbows-and-unicorns';
+import { create } from 'laxar';
 
 // ... later ...
 
-bootstrap( element, {
-   widgetAdapters,
-   configuration,
-   artifacts
-} );
+create( adapters, artifacts, configuration )
+  .tooling( 'my-app', debugInfo )
+  .bootstrap();
 ```
 
 ## Configuration
@@ -65,6 +64,9 @@ When building the artifacts listing, the loader collects JSON, HTML and CSS file
 require calls so they will be present in your webpack bundle. If no loaders are configured for the
 required files, `laxar-loader` will use the [`json-loader`][json-loader] for JSON files,
 [`raw-loader`][raw-loader] for HTML and will write out the resource path for CSS files.
+
+The `debug-info` bundle is wrapped with [`bundle-loader?lazy`][bundle-loader], exporting a function
+that can be called to asynchronously load debug information if necessary.
 
 If you want to leverage the power of webpack to pre-process these artifacts, just add your loaders to
 the webpack configuration and they will be used to load the artifacts' assets. There are just a few rules
@@ -124,8 +126,9 @@ module.exports = {
 [bootstrap]: https://github.com/LaxarJS/laxar
 [parse-query]: https://github.com/webpack/loader-utils#parsequery
 [webpack-context]: http://webpack.github.io/docs/configuration.html#context
-[raw-loader]: https://github.com/webpack/raw-loader
-[json-loader]: https://github.com/webpack/json-loader
-[style-loader]: https://github.com/webpack/style-loader
-[file-loader]: https://github.com/webpack/file-loader
-[url-loader]: https://github.com/webpack/url-loader
+[raw-loader]: https://github.com/webpack-contrib/raw-loader
+[json-loader]: https://github.com/webpack-contrib/json-loader
+[style-loader]: https://github.com/webpack-contrib/style-loader
+[file-loader]: https://github.com/webpack-contrib/file-loader
+[url-loader]: https://github.com/webpack-contrib/url-loader
+[bundle-loader]: https://github.com/webpack-contrib/bundle-loader

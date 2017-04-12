@@ -23,7 +23,9 @@ describe( 'laxar-loader', () => {
                'default-theme': 'default.theme'
             }
          } ) + ';',
-         'init.js': 'module.exports = require( \'laxar-loader?flow=main!./dummy.js\' );',
+         'init.js':
+            'exports.artifacts = require( \'laxar-loader?entries&artifacts&flow=main!./dummy.js\' );\n' +
+            'exports.debugInfo = require( \'laxar-loader?entries&debug&flow=main!./dummy.js\' );',
          'dummy.js': '/* empty */',
          'app/': {
             'flows/main.json': '{ "places": { "entry": { "page": "test" } } }',
@@ -89,7 +91,7 @@ describe( 'laxar-loader', () => {
             return done( err );
          }
 
-         expect( result ).to.have.all.keys( [
+         expect( result.artifacts ).to.have.all.keys( [
             'aliases',
             'flows',
             'themes',
@@ -97,6 +99,12 @@ describe( 'laxar-loader', () => {
             'layouts',
             'widgets',
             'controls'
+         ] );
+
+         expect( result.debugInfo ).to.have.keys( [
+            'aliases',
+            'pages',
+            'widgets'
          ] );
 
          return done();

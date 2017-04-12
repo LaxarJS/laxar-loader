@@ -11,10 +11,10 @@ import laxarTooling from 'laxar-tooling';
 
 const DEFAULT_CONFIG = {};
 
-module.exports = function( /* source, map */ ) {
+module.exports = function( source /*, map */ ) {
    const loaderContext = this;
    const query = loaderUtils.parseQuery( loaderContext.query );
-   const entries = buildEntries( query );
+   const entries = query.entries && buildEntries( query );
 
    if( loaderContext.cacheable ) {
       loaderContext.cacheable();
@@ -54,33 +54,54 @@ module.exports = function( /* source, map */ ) {
       } ), () => DEFAULT_CONFIG )
       .then( config => {
          const paths = config.paths;
+         let promise;
 
-         const artifactCollector = laxarTooling.artifactCollector.create( {
-            log,
-            paths,
-            resolve,
-            readJson
-         } );
+         if( query.entries ) {
+            const artifactCollector = laxarTooling.artifactCollector.create( {
+               log,
+               paths,
+               resolve,
+               readJson
+            } );
 
-         const artifactValidator = laxarTooling.artifactValidator.create( {
-            log
-         } );
+            const artifactValidator = laxarTooling.artifactValidator.create( {
+               log
+            } );
 
-         const artifactListing = laxarTooling.artifactListing.create( {
-            log,
-            paths,
-            resolve,
-            readJson,
-            requireFile
-         } );
+            promise = entries
+               .then( artifactCollector.collectArtifacts )
+               .then( artifactValidator.validateArtifacts );
+         }
+         else {
+            promise = Promise.resolve( loaderContext.exec( source, loaderContext.resource ) );
+         }
 
-         return entries
-            .then( artifactCollector.collectArtifacts )
-            .then( artifactValidator.validateArtifacts )
-            .then( artifactListing.buildArtifacts )
-            .then( laxarTooling.serialize )
-            .then( code => `module.exports = ${code};` );
+         if( query.debug ) {
+            const debugInfoListing = laxarTooling.debugInfoListing.create( {
+               log
+            } );
+
+            promise = promise
+               .then( debugInfoListing.buildDebugInfos );
+         }
+
+         if( query.artifacts ) {
+            const artifactListing = laxarTooling.artifactListing.create( {
+               log,
+               paths,
+               resolve,
+               readJson,
+               requireFile
+            } );
+
+            promise = promise
+               .then( artifactListing.buildArtifacts );
+         }
+
+         return promise;
       } )
+      .then( laxarTooling.serialize )
+      .then( code => `module.exports = ${code};` )
       .then(
          result => done( null, result ),
          error => done( error )
@@ -201,4 +222,3 @@ function pickQuery( pluralValue, singularValue ) {
 
    return [];
 }
-
