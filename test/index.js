@@ -13,13 +13,13 @@ describe( 'laxar-loader', () => {
       const mockfs = new MockFSPlugin( {
          'laxar.config.js': 'module.exports = ' + JSON.stringify( {
             paths: {
-               flows: 'app/flows',
-               pages: 'app/pages',
-               themes: 'components/themes',
-               layouts: 'components/layouts',
-               widgets: 'components/widgets',
-               controls: 'components/controls',
-               schemas: 'schemas',
+               flows: './app/flows',
+               pages: './app/pages',
+               themes: './components/themes',
+               layouts: './components/layouts',
+               widgets: './components/widgets',
+               controls: './components/controls',
+               schemas: './schemas',
                'default-theme': 'default.theme'
             }
          } ) + ';',
@@ -32,11 +32,12 @@ describe( 'laxar-loader', () => {
             'pages/test.json': '{ "layout": "main", "areas": { "main": [ { "widget": "test-widget" } ] } }'
          },
          'components/themes/default.theme/': {
+            'theme.json': '{ "name": "default.theme" }',
             'css/theme.css': '/* empty */'
          },
          'components/layouts/main/': {
-            'layout.json': '{ "name": "main" }',
-            'css/main.css': '/* empty */'
+            'layout.json': '{ "name": "main", "themeSource": "scss/main.scss" }',
+            'scss/main.scss': '/* empty */'
          },
          'components/widgets/test-widget/': {
             'widget.json': '{ "name": "test-widget", "controls": [ "test-control" ] }',

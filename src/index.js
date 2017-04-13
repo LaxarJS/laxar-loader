@@ -144,23 +144,7 @@ module.exports = function( source /*, map */ ) {
    }
 
    function resolve( ref ) {
-      return resolveRelative( loaderContext.context, ref )
-         .then( null, err => new Promise( ( resolve, reject ) => {
-            // webpack can only resolve things for which it has loaders.
-            // to resolve a directory, we replace all aliases.
-            const filename = resolveAliases( ref );
-
-            // if the file exists, resolve with the the filename, otherwise
-            // reject with the original error
-            loaderContext._compiler.inputFileSystem.stat( filename, e => {
-               if( e ) {
-                  reject( err );
-               }
-               else {
-                  resolve( filename );
-               }
-            } );
-         } ) );
+      return resolveRelative( loaderContext.context, ref );
    }
 
    function resolveRelative( context, ref ) {
@@ -174,17 +158,6 @@ module.exports = function( source /*, map */ ) {
             }
          } );
       } );
-   }
-
-   function resolveAliases( string ) {
-      const context = loaderContext.options.context || '';
-      const aliases = loaderContext.options.resolve.alias || {};
-
-      return path.resolve( context, Object.keys( aliases ).reduce( ( string, alias ) => {
-         const suffix = alias.substr( -1 ) === '$' ? '' : '($|/)';
-         const pattern = new RegExp( `^${alias}${suffix}` );
-         return string.replace( pattern, aliases[ alias ] + '$1' );
-      }, string ) );
    }
 };
 

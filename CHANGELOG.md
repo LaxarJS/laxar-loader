@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#18](https://github.com/LaxarJS/laxar-loader/issues/18): themes and layouts must now have descriptor `.json` files
+   + **BREAKING CHANGE**: see ticket for details
 - [#26](https://github.com/LaxarJS/laxar-loader/issues/26): loading the `debug-info` lazily is now opt-in with the `?lazy` parameter
    + NEW FEATURE: see ticket for details
 
