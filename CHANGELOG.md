@@ -2,6 +2,9 @@
 
 ## Last Changes
 
+- [#26](https://github.com/LaxarJS/laxar-loader/issues/26): loading the `debug-info` lazily is now opt-in with the `?lazy` parameter
+   + NEW FEATURE: see ticket for details
+
 
 ## v2.0.0-alpha.3
 
