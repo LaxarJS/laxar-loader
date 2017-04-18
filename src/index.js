@@ -162,7 +162,9 @@ module.exports = function( source /*, map */ ) {
 };
 
 function buildEntries( query ) {
-   const entry = {};
+   const entry = {
+      themes: []
+   };
 
    const entryKeys = {
       flows: 'flow',
@@ -175,7 +177,14 @@ function buildEntries( query ) {
 
    Object.keys( entryKeys ).forEach( plural => {
       const singular = entryKeys[ plural ];
-      entry[ plural ] = pickQuery( query[ plural ], query[ singular ] );
+      const items = [
+         ...ensureArray( query[ singular ] ),
+         ...ensureArray( query[ plural ] )
+      ];
+
+      if( items.lenth > 0 ) {
+         entry[ plural ] = items;
+      }
    } );
 
    if( entry.themes.indexOf( 'default' ) < 0 ) {
@@ -185,13 +194,6 @@ function buildEntries( query ) {
    return Promise.resolve( [ entry ] );
 }
 
-function pickQuery( pluralValue, singularValue ) {
-   if( pluralValue ) {
-      return Array.isArray( pluralValue ) ? pluralValue : [ pluralValue ];
-   }
-   if( singularValue ) {
-      return [ singularValue ];
-   }
-
-   return [];
+function ensureArray( _ = [] ) {
+   return Array.isArray( _ ) ? _ : [ _ ];
 }

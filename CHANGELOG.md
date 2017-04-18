@@ -2,6 +2,7 @@
 
 ## Last Changes
 
+- [#19](https://github.com/LaxarJS/laxar-loader/issues/19): singular and plural options (`?flow=` vs. `?flows[]=`) may now be used interchangeably
 - [#18](https://github.com/LaxarJS/laxar-loader/issues/18): themes and layouts must now have descriptor `.json` files
    + **BREAKING CHANGE**: see ticket for details
 - [#27](https://github.com/LaxarJS/laxar-loader/issues/27): loading the `debug-info` lazily is now opt-in with the `?lazy` parameter
