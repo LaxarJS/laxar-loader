@@ -2,24 +2,32 @@
 
 > webpack loader for LaxarJS
 
-## Example
+Bundles and validates LaxarJS application artifacts as needed.
 
+
+## Example
 
 You could use `laxar-loader` directly, but since it does not need a specific entry module,
 we pre-rolled the `artifacts` and `debug-info` entry points for you and placed them into this
-module. Import the entry points in your `init.js`:
+module.
+Import the entry points in your `init.js`:
 
 ```js
 import artifacts from 'laxar-loader/artifacts?flow=main&theme=rainbows-and-unicorns';
 import debugInfo from 'laxar-loader/debug-info?flow=main&theme=rainbows-and-unicorns';
 import { create } from 'laxar';
 
+// const adapters = [ ... ];
+// const configuration = { ... };
 // ... later ...
 
 create( adapters, artifacts, configuration )
-  .tooling( 'my-app', debugInfo )
+  .tooling( debugInfo )
   .bootstrap();
 ```
+
+
+
 
 ## Configuration
 
@@ -32,16 +40,19 @@ The `laxar.config.js` file should look like this:
 ```js
 module.exports = {
    paths: {
-      flows: './path/to/flows', // default: 'flows'
-      themes: './path/to/themes', // default: 'themes'
-      pages: './path/to/pages', // default: 'pages'
-      layouts: './path/to/layouts', // default: 'layouts'
-      widgets: './path/to/widgets', // default: 'widgets'
-      controls: './path/to/controls', // default: 'controls'
+      flows: './path/to/flows', // default: './application/flows'
+      themes: './path/to/themes', // default: './application/themes'
+      pages: './path/to/pages', // default: './application/pages'
+      layouts: './path/to/layouts', // default: './application/layouts'
+      widgets: './path/to/widgets', // default: './application/widgets'
+      controls: './path/to/controls', // default: './application/controls'
       'default-theme': './path/to/default.theme'
    }
 };
 ```
+
+If no `laxar.config.js` exists, the defaults (above) are used.
+
 
 ## Query options (aka the stuff after the "?")
 
@@ -57,6 +68,7 @@ module.exports = {
 Refer to the [webpack documentation][parse-query] for details about the loader syntax.
 
 The loaded artifacts listing can then be used to [bootstrap LaxarJS][bootstrap].
+
 
 ## Interaction with other loaders
 
@@ -80,52 +92,50 @@ Example:
 
 ```js
 module.exports = {
+   entry: { 'init': './init.js' },
+
+   output: {
+      path: path.resolve( __dirname, `./${publicPath}` ),
+      publicPath,
+      filename: '[name].bundle.js',
+      chunkFilename: '[name].bundle.js'
+   },
+
    module: {
-      loaders: [
+      rules: [
          {
             test: /\.(css|gif|jpe?g|png|ttf|woff2?|svg|eot|otf)(\?.*)?$/,
-            loader: 'file'
+            loader: 'file-loader',
+            options: {
+               name: 'assets/[name]-[sha1:hash:hex:6].[ext]'
+            }
          },
          {
             test: /\.(gif|jpe?g|png|svg)$/,
-            loader: 'img?progressive=true'
+            loader: 'img-loader?progressive=true'
          },
          {
             test: /\.css$/,
-            loader: 'style!css'
+            loader: 'style-loader!css-loader'
          },
          {
             test: /\/default.theme\/.*\.scss$/,
-            loader: 'style!css!sass'
+            loader: 'sass-loader',
+            options: require( 'laxar-uikit/themes/default.theme/sass-options' )
          },
          {
             test: /\/rainbows-and-unicorns\.theme\/.*\.scss$/,
-            loader: 'style!css!sass?config=sassLoaderRainbows'
+            loader: 'sass-loader',
+            options: require( './application/themes/rainbows-and-unicorns.theme/sass-options' )
+         }
       ]
-   },
-   fileLoader: {
-      name: 'assets/[name]-[sha1:hash:hex:6].[ext]'
-   },
-   sassLoader: {
-      includePaths: [
-         './themes/default.theme/scss',
-         './bower_components/bootstrap-sass-official/assets/stylesheets',
-         './bower_components'
-      ].map( p => path.resolve( __dirname, p ) )
-   },
-   sassLoaderRainbows: {
-      includePaths: [
-         './themes/rainbows-and-unicorns.theme/scss',
-         './bower_components/bootstrap-sass-official/assets/stylesheets',
-         './bower_components'
-      ].map( p => path.resolve( __dirname, p ) )
    }
 };
 ```
 
-[bootstrap]: https://github.com/LaxarJS/laxar
+[bootstrap]: https://laxarjs.org/docs/laxar-v2-latest/api/laxar/#laxar.create
 [parse-query]: https://github.com/webpack/loader-utils#parsequery
-[webpack-context]: http://webpack.github.io/docs/configuration.html#context
+[webpack-context]: https://webpack.js.org/configuration/entry-context/#context
 [raw-loader]: https://github.com/webpack-contrib/raw-loader
 [json-loader]: https://github.com/webpack-contrib/json-loader
 [style-loader]: https://github.com/webpack-contrib/style-loader
