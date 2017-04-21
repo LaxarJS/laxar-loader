@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#29](https://github.com/LaxarJS/laxar-loader/issues/29): fixed typo that broke artifact loading
+
 
 ## v2.0.0-rc.0
 

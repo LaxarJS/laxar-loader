@@ -2,6 +2,10 @@
 
 > webpack loader for LaxarJS
 
+<span class="laxar-external-documentation-hint">
+   Take a look at the <a href="https://www.laxarjs.org/docs/laxar-loader-latest/">documentation site</a> to browse documentation for all releases of this artifact.
+</span>
+
 Bundles and validates LaxarJS application artifacts as needed.
 
 

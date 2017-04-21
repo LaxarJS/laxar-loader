@@ -43,10 +43,10 @@
     "babel-register": "^6.18.0",
     "chai": "^3.5.0",
     "enhanced-resolve": "^2.3.0",
-    "eslint": "^3.0.1",
-    "eslint-config-laxarjs": "^0.3.0",
+    "eslint": "^3.19.0",
+    "eslint-config-laxarjs": "^2.0.0",
     "memory-fs": "^0.3.0",
     "mocha": "^3.0.2",
-    "webpack": "^2.2.0"
+    "webpack": "^2.4.1"
   }
 }

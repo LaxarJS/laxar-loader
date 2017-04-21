@@ -182,7 +182,7 @@ function buildEntries( query ) {
          ...ensureArray( query[ plural ] )
       ];
 
-      if( items.lenth > 0 ) {
+      if( items.length > 0 ) {
          entry[ plural ] = items;
       }
    } );
