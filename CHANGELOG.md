@@ -2,6 +2,9 @@
 
 ## Last Changes
 
+
+## v2.0.0-rc.2
+
 - [#30](https://github.com/LaxarJS/laxar-loader/issues/30): fixed incorrect context path when resolving artifacts
 
 

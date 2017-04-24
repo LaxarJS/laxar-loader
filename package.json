@@ -1,8 +1,8 @@
 {
   "name": "laxar-loader",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0-rc.2",
   "description": "Webpack loader for LaxarJS artifacts",
-  "homepage": "http://laxarjs.org",
+  "homepage": "https://laxarjs.org/docs/laxar-loader-latest",
   "authors": [],
   "license": "MIT",
   "repsitory": {
