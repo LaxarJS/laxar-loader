@@ -116,8 +116,8 @@ module.exports = function( source /*, map */ ) {
       const request = loader ? `${loader}!${module}` : module;
 
       if( type === 'module' ) {
-         return resolveRelative( loaderContext.context, module )
-            .then( null, () => resolveRelative( loaderContext.context, `${module}/${name}` ) )
+         return resolve( module )
+            .then( null, () => resolve( `${module}/${name}` ) )
             .then( path => () => `require( ${loaderUtils.stringifyRequest( loaderContext, path )} )` );
       }
 
@@ -144,7 +144,7 @@ module.exports = function( source /*, map */ ) {
    }
 
    function resolve( ref ) {
-      return resolveRelative( loaderContext.context, ref );
+      return resolveRelative( loaderContext.options.context, ref );
    }
 
    function resolveRelative( context, ref ) {
