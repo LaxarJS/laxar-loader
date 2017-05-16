@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#31](https://github.com/LaxarJS/laxar-loader/issues/31): fixed dependencies in package.json
+
 
 ## v2.0.0-rc.2
 
