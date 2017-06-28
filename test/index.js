@@ -111,7 +111,7 @@ describe( 'laxar-loader', () => {
          return done();
       } );
 
-   } ).timeout( 5000 );
+   } ).timeout( 6000 );
 
 } );
 
