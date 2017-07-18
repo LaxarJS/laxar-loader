@@ -2,6 +2,8 @@
 
 ## Last Changes
 
+- [#32](https://github.com/LaxarJS/laxar-loader/issues/32): fixed `debug-info` not being bundled separately
+
 
 ## v2.0.0
 ## v2.0.0-rc.3

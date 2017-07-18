@@ -30,7 +30,6 @@
     "stylesheets"
   ],
   "dependencies": {
-    "bundle-loader": "^0.5.5",
     "json-loader": "^0.5.4",
     "laxar-tooling": "^2.0.0",
     "loader-utils": "^0.2.15",
