@@ -6,7 +6,7 @@
 'use strict';
 
 import loaderUtils from 'loader-utils';
-import { posix as path } from 'path';
+import path from 'path';
 
 module.exports = function( content, map ) {
    if( this.cacheable ) {

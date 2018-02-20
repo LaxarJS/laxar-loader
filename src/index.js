@@ -5,7 +5,7 @@
  */
 'use strict';
 
-import { posix as path } from 'path';
+import path from 'path';
 import loaderUtils from 'loader-utils';
 import laxarTooling from 'laxar-tooling';
 
