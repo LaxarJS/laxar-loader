@@ -3,6 +3,8 @@
 ## Last Changes
 
 
+## v2.0.2
+
 - [#33](https://github.com/LaxarJS/laxar-loader/issues/33): fixed loading laxar assets on windows
 
 ## v2.0.1
