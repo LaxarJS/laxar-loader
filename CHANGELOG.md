@@ -2,10 +2,14 @@
 
 ## Last Changes
 
+- [#34](https://github.com/LaxarJS/laxar-loader/issues/34): add webpack 4 compatibility
+   + NEW FEATURE: see tickert for details
+
 
 ## v2.0.2
 
 - [#33](https://github.com/LaxarJS/laxar-loader/issues/33): fixed loading laxar assets on windows
+
 
 ## v2.0.1
 
