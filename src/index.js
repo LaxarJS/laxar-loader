@@ -10,9 +10,12 @@ import loaderUtils from 'loader-utils';
 import laxarTooling from 'laxar-tooling';
 
 const DEFAULT_CONFIG = {};
+const JSONISH = /^\s*[{[]/;
 
 module.exports = function( source /*, map */ ) {
    const loaderContext = this;
+   const rootContext = loaderContext.rootContext ||
+      ( loaderContext.options ? loaderContext.options.context : '' );
    const query = loaderUtils.parseQuery( loaderContext.query );
    const entries = query.entries && buildEntries( query );
 
@@ -29,7 +32,7 @@ module.exports = function( source /*, map */ ) {
 
    const configPath = typeof query.laxarConfig === 'string' ?
       resolveRelative( loaderContext.context, query.laxarConfig ) :
-      resolveRelative( loaderContext.options.context || '', './laxar.config' );
+      resolveRelative( rootContext, './laxar.config' );
 
    const loaders = {
       json: require.resolve( './json' ),
@@ -108,7 +111,13 @@ module.exports = function( source /*, map */ ) {
       );
 
    function readJson( filename ) {
-      return loadModule( `${loaders.json}!${filename}` );
+      return loadSource( filename )
+         .then( code => {
+            if( JSONISH.test( code ) ) {
+               return JSON.parse( code );
+            }
+            return loaderContext.exec( code, filename );
+         } );
    }
 
    function requireFile( module, type, name ) {
@@ -126,25 +135,24 @@ module.exports = function( source /*, map */ ) {
 
    function loadModule( request ) {
       const filename = request.split( '!' ).pop().split( '?' ).shift();
+      return loadSource( request )
+         .then( code => loaderContext.exec( code, filename ) );
+   }
 
+   function loadSource( request ) {
       return new Promise( ( resolve, reject ) => {
          loaderContext.loadModule( request, ( err, code ) => {
             if( err ) {
                reject( err );
                return;
             }
-            try {
-               resolve( loaderContext.exec( code, filename ) );
-            }
-            catch( err ) {
-               reject( err );
-            }
+            resolve( code );
          } );
       } );
    }
 
    function resolve( ref ) {
-      return resolveRelative( loaderContext.options.context, ref );
+      return resolveRelative( rootContext, ref );
    }
 
    function resolveRelative( context, ref ) {
