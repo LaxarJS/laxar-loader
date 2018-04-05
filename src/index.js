@@ -57,6 +57,7 @@ module.exports = function( source /*, map */ ) {
       } ), () => DEFAULT_CONFIG )
       .then( config => {
          const paths = config.paths;
+         const split = [];
          let promise;
 
          if( query.entries ) {
@@ -77,6 +78,18 @@ module.exports = function( source /*, map */ ) {
          }
          else {
             promise = Promise.resolve( loaderContext.exec( source, loaderContext.resource ) );
+         }
+
+         if( query.split ) {
+            promise = promise
+               .then( artifacts => {
+                  split.push( ...artifacts.pages );
+                  artifacts.pages = [];
+                  artifacts.widgets = [];
+                  artifacts.controls = [];
+                  artifacts.layouts = [];
+                  return artifacts;
+               } );
          }
 
          if( query.debug ) {
@@ -101,10 +114,34 @@ module.exports = function( source /*, map */ ) {
                .then( artifactListing.buildArtifacts );
          }
 
+         promise = promise
+            .then( laxarTooling.serialize );
+
+         if( query.split ) {
+            promise = promise
+               .then( code => {
+                  const proxy = split.map( artifact => {
+                     const entry = { [ artifact.category ]: artifact.refs };
+                     const request = loaderUtils.stringifyRequest( loaderContext, recursiveQuery( entry ) );
+                     return `proxy( artifacts, ${JSON.stringify( entry )},
+                        () => import( /* webpackChunkName: "${artifact.name}" */ ${request} ) );`;
+                  } );
+
+                  return `
+                     import { proxy } from '${__dirname}/split-base';
+                     const artifacts = ${code};
+                     ${proxy.join('\n')}
+                     export default artifacts;
+                  `;
+               } );
+         }
+         else {
+            promise = promise
+               .then( code => `module.exports = ${code};` );
+         }
+
          return promise;
       } )
-      .then( laxarTooling.serialize )
-      .then( code => `module.exports = ${code};` )
       .then(
          result => done( null, result ),
          error => done( error )
@@ -166,6 +203,22 @@ module.exports = function( source /*, map */ ) {
             }
          } );
       } );
+   }
+
+   function recursiveQuery( entry ) {
+      const dummy = require.resolve( '../dummy' );
+      const mode = query.debugInfo ? 'debug-info' : 'artifacts';
+
+      const themes = [
+         ...ensureArray( query.theme ),
+         ...ensureArray( query.themes )
+      ];
+
+      const entries = [].concat.apply(
+         themes.map( theme => `themes[]=${theme}` ),
+         Object.keys( entry )
+            .map( category => entry[ category ].map( ref => `${category}[]=${ref}` ) ) );
+      return `${__filename}?entries&${mode}&${entries.join('&')}!${dummy}`;
    }
 };
 
