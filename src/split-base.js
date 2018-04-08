@@ -11,7 +11,6 @@ export function proxy( target, artifacts, fn ) {
    function validate( source ) {
       Object.keys( artifacts )
          .forEach( bucket => {
-            console.log( bucket, artifacts[ bucket ], source );
             const missing = artifacts[ bucket ]
                .filter( ref => !source.aliases[ bucket ].hasOwnProperty( ref ) );
 

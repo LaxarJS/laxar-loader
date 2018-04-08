@@ -12,6 +12,9 @@ import laxarTooling from 'laxar-tooling';
 const DEFAULT_CONFIG = {};
 const JSONISH = /^\s*[{[]/;
 
+const DUMMY_MODULE = `${path.dirname(__dirname)}/dummy.js`;
+const SPLIT_MODULE = `${__dirname}/split-base.js`;
+
 module.exports = function( source /*, map */ ) {
    const loaderContext = this;
    const rootContext = loaderContext.rootContext ||
@@ -128,7 +131,7 @@ module.exports = function( source /*, map */ ) {
                   } );
 
                   return `
-                     import { proxy } from '${__dirname}/split-base';
+                     import { proxy } from '${SPLIT_MODULE}';
                      const artifacts = ${code};
                      ${proxy.join('\n')}
                      export default artifacts;
@@ -206,7 +209,6 @@ module.exports = function( source /*, map */ ) {
    }
 
    function recursiveQuery( entry ) {
-      const dummy = require.resolve( '../dummy' );
       const mode = query.debugInfo ? 'debug-info' : 'artifacts';
 
       const themes = [
@@ -218,7 +220,7 @@ module.exports = function( source /*, map */ ) {
          themes.map( theme => `themes[]=${theme}` ),
          Object.keys( entry )
             .map( category => entry[ category ].map( ref => `${category}[]=${ref}` ) ) );
-      return `${__filename}?entries&${mode}&${entries.join('&')}!${dummy}`;
+      return `${__filename}?entries&${mode}&${entries.join('&')}!${DUMMY_MODULE}`;
    }
 };
 
