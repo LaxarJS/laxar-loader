@@ -2,6 +2,9 @@
 
 ## Last Changes
 
+- [#36](https://github.com/LaxarJS/laxar-loader/issues/36): fix webpack 4 compatibility
+
+
 ## v2.1.0
 
 - [#34](https://github.com/LaxarJS/laxar-loader/issues/34): add webpack 4 compatibility

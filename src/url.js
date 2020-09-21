@@ -22,7 +22,7 @@ module.exports.pitch = function( remainingRequest /*, precedingRequest, data */ 
    }
 
    if( remainingRequest.indexOf( '!' ) < 0 ) {
-      const context = this.options.context || '';
+      const context = this.rootContext || ( this.options ? this.options.context : '' );
       const resource = path.relative( context, remainingRequest );
 
       this.callback( null, `module.exports = ${JSON.stringify( resource )};` );
